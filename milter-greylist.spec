@@ -19,8 +19,8 @@
 %define libspf2 0
 %{?build_libspf2:%define libspf2 1}
 
-%define libGeoIP 0
-%{?build_libGeoIP:%define libGeoIP 1}
+%define libmaxminddb 0
+%{?build_libmaxminddb:%define libmaxminddb 1}
 
 %define libcurl 0
 %{?build_libcurl:%define libcurl 1}
@@ -66,8 +66,8 @@ BuildRequires: libspf2-devel
 %if %{libcurl}
 BuildRequires: curl-devel
 %endif
-%if %{libGeoIP}
-BuildRequires: GeoIP-devel
+%if %{libmaxminddb}
+BuildRequires: libmaxminddb-devel
 %endif
 
 %description
@@ -111,8 +111,8 @@ before the second attempt.
 %if %{libcurl}
 	--with-libcurl \
 %endif
-%if %{libGeoIP}
-	--with-libGeoIP \
+%if %{libmaxminddb}
+	--with-libmaxminddb \
 %endif
 %if %{libdkim}
         --with-libdkim=/usr/include \
@@ -203,6 +203,9 @@ fi
 %attr(0600,%{user},root) %ghost %{_localstatedir}/milter-greylist/greylist.db
 
 %changelog
+* Tue Jan 15 2019 Markus Wennrich <mwennrich@gmail.com>
+- changed deprecated libGeoIP to libmaxminddb (GeoIP2)
+
 * Mon Sep 10 2012 Murty Rompalli <murty@solar.murty.net>
 - Mkdir parent dir for pidfile/socket/dumpfile
 - Add helpful error message if mkdir fails

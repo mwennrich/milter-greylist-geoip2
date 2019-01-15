@@ -58,10 +58,11 @@ __RCSID("$Id");
 #include <dmalloc.h> 
 #endif
 
-static GeoIP *geoip_handle = NULL;
-static GeoIP *geoip_handle_v6 = NULL;
+#include <maxminddb.h>
+
+static MMDB_s mmdb;
+static MMDB_s *geoip_handle = &mmdb;
 static char geoip_database[MAXPATHLEN + 1];
-static char geoip_database_v6[MAXPATHLEN + 1];
 static pthread_rwlock_t geoip_lock;
 
 void
@@ -83,39 +84,17 @@ geoip_set_db(name)
 	char *name;
 {
 	if (geoip_handle != NULL) {
-		GeoIP_delete(geoip_handle);
-		geoip_handle = NULL;
+		MMDB_close(geoip_handle);
 	}
 	
 	strncpy(geoip_database, name, MAXPATHLEN);
 	geoip_database[MAXPATHLEN] = '\0';
 
-	geoip_handle = GeoIP_open(geoip_database, GEOIP_STANDARD);
-	if (geoip_handle == NULL) {
+	int status = MMDB_open(geoip_database, MMDB_MODE_MMAP, geoip_handle);
+	if (status != MMDB_SUCCESS) {
 		mg_log(LOG_WARNING, 
-		    "GeoIP databade \"%s\" cannot be used",
+		    "GeoIP database \"%s\" cannot be used",
 		    geoip_database);
-		return;
-	}
-}
-
-void
-geoip_set_db_v6(name)
-	char *name;
-{
-	if (geoip_handle_v6 != NULL) {
-		GeoIP_delete(geoip_handle_v6);
-		geoip_handle_v6 = NULL;
-	}
-
-	strncpy(geoip_database_v6, name, MAXPATHLEN);
-	geoip_database_v6[MAXPATHLEN] = '\0';
-
-	geoip_handle_v6 = GeoIP_open(geoip_database_v6, GEOIP_STANDARD);
-	if (geoip_handle_v6 == NULL) {
-		mg_log(LOG_WARNING,
-		    "GeoIPv6 databade \"%s\" cannot be used",
-		    geoip_database_v6);
 		return;
 	}
 }
@@ -142,32 +121,8 @@ void
 geoip_set_ccode(priv)
 	struct mlfi_priv *priv;
 {
-	GEOIP_API const char *(*country_code_by_addr)(GeoIP *, const char *);
-	GeoIP *handle;
 	char ipstr[IPADDRSTRLEN];
-
-	switch (SA(&priv->priv_addr)->sa_family) {
-	case AF_INET:
-		country_code_by_addr = GeoIP_country_code_by_addr;
-		handle = geoip_handle;
-		break;
-#ifdef AF_INET6
-	case AF_INET6:
-		country_code_by_addr = GeoIP_country_code_by_addr_v6;
-		handle = geoip_handle_v6;
-		break;
-#endif
-	default:
-		mg_log(LOG_DEBUG, "GeoIP not supported address family");
-		priv->priv_ccode = NULL;
-		return;
-	}
-
-	if (geoip_handle == NULL) {
-		mg_log(LOG_DEBUG, "GeoIP is not available");
-		priv->priv_ccode = NULL;
-		return;
-	}
+        int gai_error, mmdb_error;
 
 	if (iptostring(SA(&priv->priv_addr),
 	    priv->priv_addrlen, ipstr, sizeof(ipstr)) == NULL) {
@@ -177,7 +132,19 @@ geoip_set_ccode(priv)
 	}
 
 	WRLOCK(geoip_lock);
-	priv->priv_ccode = country_code_by_addr(handle, ipstr);
+	MMDB_lookup_result_s result = MMDB_lookup_string(geoip_handle, ipstr, &gai_error, &mmdb_error);
+	if (gai_error == 0) {
+		if (mmdb_error == MMDB_SUCCESS) {
+			MMDB_entry_data_s entry_data;
+			int status = MMDB_get_value(&result.entry, &entry_data, "country", "iso_code", NULL);
+			if (status == MMDB_SUCCESS) {
+				if (entry_data.has_data) {
+					priv->priv_ccode = strndup(entry_data.utf8_string, entry_data.data_size);
+				}
+			}
+		}
+        }
+
 	UNLOCK(geoip_lock);
 
 	if (priv->priv_ccode == NULL)

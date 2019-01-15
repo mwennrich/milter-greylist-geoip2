@@ -455,10 +455,10 @@ LDFLAGS=$SAVEDLDFLAGS
 CFLAGS=$SAVEDCFLAGS
 LIBS=$SAVEDLIBS
 
-AC_ARG_WITH(libGeoIP, 
-	[  --with-libGeoIP=DIR  Find libGeoIP in DIR],
+AC_ARG_WITH(libmaxminddb, 
+	[  --with-libmaxminddb=DIR  Find GeoIP2 libmaxminddb in DIR],
 	[CFLAGS=$CFLAGS" -I$withval/include -DUSE_GEOIP" 
-	    LIBS="-lGeoIP $LIBS"
+	    LIBS="-lmaxminddb $LIBS"
 	    LDFLAGS=$LDFLAGS" -L$withval/lib -Wl,$rpath$withval/lib"])
 AC_ARG_WITH(libdmalloc,
 	[  --with-libdmalloc=DIR  Find libdmalloc in DIR],

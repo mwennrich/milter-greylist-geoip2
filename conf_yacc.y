@@ -57,7 +57,7 @@ __RCSID("$Id: conf_yacc.y,v 1.129 2016/11/24 04:11:37 manu Exp $");
 #endif
 #include "prop.h"
 #ifdef USE_GEOIP
-#include "geoip.h"
+#include "maxminddb.h"
 #endif
 #ifdef USE_P0F
 #include "p0f.h"
@@ -149,7 +149,6 @@ lines	:	lines netblock '\n'
 	|	lines socket '\n'
 	|	lines user '\n'
 	|	lines geoipdb '\n'
-	|	lines geoipv6db '\n'
 	|	lines nodetach '\n'
 	|	lines lazyaw '\n'
 	|	lines report '\n'
@@ -764,19 +763,6 @@ geoipdb:	GEOIPDB QSTRING	{
 				char path[QSTRLEN + 1];
 
 				geoip_set_db(quotepath(path, $2, QSTRLEN));
-#else
-				mg_log(LOG_INFO, 
-				    "GeoIP support not compiled in, "
-				    "ignore line %d", 
-				    conf_line);
-#endif
-				}
-	;
-geoipv6db:	GEOIPV6DB QSTRING	{
-#ifdef USE_GEOIP
-				char path[QSTRLEN + 1];
-
-				geoip_set_db_v6(quotepath(path, $2, QSTRLEN));
 #else
 				mg_log(LOG_INFO, 
 				    "GeoIP support not compiled in, "
