@@ -1,0 +1,722 @@
+4.6.2
+	Add rawfrom ACL clause to match unprocessed FROM command
+	Fix helo ACL clause string match (Attila Bruncsak)
+	Avoid excessive GeoIP logs ig database was not set
+	Fix crashes on configuration reload
+	Allow empty quoted strings in configuration
+	Add GeoIP support for IPv6 (Hajimu UMEMOTO)
+4.6.1
+	Fix DKIM ACL evaluation (Serge Stepanov)
+4.6
+	No changes since rc1
+4.6rc1
+	Fix file descriptor leak in spamd code (Attila Bruncsak)
+4.6a2
+	Fix strtok_r() state usage (Attila Bruncsak)
+	Document queueID log for PostFix (Steven Hiscocks)
+4.6a1
+	Support IPv6 DNSRBL (Kazuyuki YOSHIDA, Hajimu UMEMOTO)
+4.5.16
+	Reflect config syntax in addhheader logs (Steven Hiscocks)
+	Honour daemon option in Redhat startup script (Attila Bruncsak)
+	Fix crash in SPF code
+4.5.15
+	Use QueueId on Postfix (Steven Hiscocks)
+	Only change socket ownership if it exists in filesystem
+	Index option for the addheader clause (Steven Hiscocks)
+	Add format strings for SPF and DKIM results (Steven Hiscocks)
+	Update author list
+4.5.14
+	Build fixes
+4.5.13
+	Accept format strings in helo acl and compare without case (Jim Klimov)
+	Improve configure ability to run with -Werror (Jim Klimov)
+	Overcome select(2) file descriptor limit (Attila Bruncsak) 
+	Support glob(7) pattern matching for properties
+4.5.12
+	Prevent buffer overflow on IP address in DRAC code (David Binderman)
+	Remove duplicate dkim check in configure (Jim Klimov)
+	Let MX clause work if a MX has no DNS A record (Rudy Eschauzier)
+	Fix build on CentOS (Mart Pirita)
+4.5.11
+	Use asynchronous LDAP calls to reduce lock contention on heavy load
+4.5.10
+	Fix msgcount miscomputation and crashes
+4.5.9
+	multiracl option to disable sticky whitelisting among recipients
+4.5.8
+	FreeBSD build fix (John Wood)
+	Fix CRLF in multiline headers for DKIM (John Wood)
+	Support OpenDKIM (John Wood)
+	Build if PACKAGE_URL is not defined
+	res_state Solaris build fix  (Attila Bruncsak) 
+	Fix maxpeek usage for body matching clauses (Jean-Jacques Puig)
+4.5.7
+	Do not use strndup() for POSIX.1-2001 compatibility
+4.5.6
+	Fix bug that replaced first character of hostname by '['
+	Do not force into lowercases properties set using the set clause
+	Add %cA and %ca to report current ACL line number and id
+	Increase format string maximum length to 4096
+	Break long SMTP replies in mutiple lines
+	Add configure --disable-parallel-make in case make -j is unsupported
+4.5.5
+	Documentation update
+4.5.4
+	Fix memory leak in log ACL clause
+	Updated AUTHORS in man page
+	Typos in man page, style (Jim Klimov)
+	Numeric operator tests for property versus number
+	Numeric operator tests for property versus property
+4.5.3
+	format string expanstion now honour %r everywhere possible
+	unbracket option to resolved MTA-passed bracketed unresolved IP
+	set ACL clause to set/increment/decrement properties
+	log ACL clause to send formatted string to syslog
+4.5.2
+	Fix crash when chown socket without group
+	Fix memory leak in nsupdate config reload
+	Fix nsupdate servers option
+	Build fixes (John Wood)
+	Fix ACL bypass for second recipient when sender passed auth/tls/spf
+	Parallel build (Jim Klimov)
+	Configurable package information (Jim Klimov)
+	More verbosity in SPF logs (Jim Klimov)
+	Use localaddr for p0f and %V format string (Jim Klimov)
+	Search . first for includes (Jim Klimov)
+	Make unknown AF family non fatal in p0f, report errors once (Jim Klimov)
+4.5.1
+	DNS update support
+	make clean clears milter-greylist.spec
+	Use ZZ for unknown GeoIP country
+	Add IPv6 support for MX sync (Hajimu UMEMOTO)
+4.4.3
+	More Solaris build fixes (Jim Klimov)
+	Fix swapped %f and %r for stat example in default greylist.conf
+	Support p0f v3.06 and up with --with-p0f-src or --enable-p0f306
+4.4.2
+	Solaris build fixes (Jim Klimov, Matthias Scheler)
+4.4.1
+	Make sure socket ownership will not cause sendmail to complain
+4.4
+	Attempt to apply subjtag even if message is bigger than maxpeek
+4.4rc1
+	Fix build --with-spamd
+	Man page layout improvements
+4.4a4
+	subjtag fix
+	better handling of ldap escapes in substitution strings
+4.4a3
+	buildmx and builddkim for RPM, fix libsm dependency (Rudy Eschauzier)
+	Improve regex examples in documentation (Denis Solovyov)
+	Documentation fix on SPF (Attila Bruncsak) 
+	Mkdir parent dir for pidfile/socket/dumpfile
+	Add helpful error message if mkdir fails
+	Fix duplicate logging when run with -D via systemd
+	Add subjtag clause in DATA stage ACL to add a tag to message subject
+	Allow comparison of msgsize, rcptcount & spamd, against values from LDAP
+	Format string substitution get %-encoding for urlcheck
+	Format string substitution get \-escapes and %-encoding for ldapcheck
+4.4a2
+	Build fixes
+	Fix corrupted log output
+4.4a1
+	Typo fixes in man pages (Bernhard Schneider)
+	localaddr option so that Postifix user can use spf self
+	Allow filtering header and body against LDAP or CURL gathered properties
+	Add format string to report last matching LDAP or CURL propery
+	Fix memory corruption bug
+	Add a addfooter action clause in ACL, to add mail a footer
+	Allow per-dacl maxpeek setting, set by maxpeer action clause in racl
+	Add LDAP or CURL gathered property substitution in format strings
+	Add continue type ACL
+	p0f v3 support
+4.3.9
+	Fix wrong message size tracking, causing bug in spamd (Attila Bruncsak)
+	Fix ratelimit sliding window for computing average
+	Fix p0f port byte order (Enrico Scholz)
+	Fix milter-greylist.m4 for newer Sendmail (Joe Pruett)
+	Fix autoconf warning about --datarootdir (R P Herrold)
+	Add spamassassin toggling to the .spec file (Adam Katz)
+	Fix DKIM (John Wood, Jörgen Lundman)
+4.3.8
+	Fix spamd hang if message contains NULL (Enrico Scholz)
+	Format string for SpamAssassin score
+	Build fix for Solaris
+	Send the queueid to spamd (Petar Bogdanovic)
+	Close-on-exec sockets to avoid file shortage with stat (Enrico Scholz)
+	Add a missing comma in X-Greylist (Kouhei Sutou)
+	Look for liresolv in ${libdir} instead of /usr/lib (DUFRESNE VINCENT)
+	Fix SPF on Postfix (Kouhei Sutou)
+4.3.7
+	Build fix when SPF is enabled
+	Ratelimit on SMTP sessions and data size
+	Fix missing ratelimit initialization 
+	Test for legacy config file timestamp so that it does not loop reloading
+4.3.6
+	New rate limiting feature
+	Add a domatch keyword to ldapconf to enable ldapcheck matches
+	Network byte order byg fix in p0f code (Adrian Dabrowski)
+	Fix MX clause wrong results caused by thread unsafety (Hajimu UMEMOTO)
+	Do not reject message if p0f cannot identiy the remote system
+4.3.5
+	Update .spec file for libcurl, GeoIP and p0f support (Chris Bennett)
+	Really support dkim self and dkim none clauses
+	Better configure test to avoid resolver memory leaks (Hajimu UMEMOTO)
+	Fix p0f wrong results caused by thread unsafety (Enrico Scholz)
+	Fix GeoIP related crashes caused by thread unsafety (Enrico Scholz)
+	Start as root and drop priv later on RedHat (Ole Hansen)
+	Fix dumpfile argument on command line (Ole Hansen)
+	Fix missing reason for whitelisting (Attila Bruncsak)
+	Wait 5 seconds before stopping, for database dump (Attila Bruncsak)
+	Add mx ACL clause (Rudy Eschauzier)
+	Do not use socket mode for the PID file (Kouhei Sutou)
+	Fix tarpit deadlock (Kouhei Sutou)
+4.3.4
+	Restore not ACL keyword functionnality (Benoit Branciard)
+	Fix uninitialized thread condition variable (Petar Bogdanovic)
+	Fix Debian startup script
+	New tarpit feature (Kouhei Sutou)
+	Support make install as unprivilegied user (Kouhei Sutou)
+4.3.3 
+	Fix unallocated memory use for ldapcheck and urlcheck property matching
+	Fix off-by one bug in DATA stage filtering (Pascal Lalonde)
+	Allow ACL override by ldapcheck clauses (Piotr Wadas)
+	Header for autowhitelisted messages bug fix (Attila Bruncsak)
+	Fix MX sync stop on config reload (Attila Bruncsak, Hajimu UMEMOTO)
+	Improve Debian startup script (Adam Katz)
+	Make SpamAssassin headers Sendmail-like (Petar Bogdanovic)
+4.3.2
+	Merge autowhite and greylist databases (Rudy Eschauzier)
+4.3.1
+	Log ACL id instead of line number (John Thiltges)
+	Fix LDAP thread safety issues
+	Make LDAP querries timeout configurable
+	Make MX sync timeout peer-configurable (Attila Bruncsak)
+	Fix a crash when LDAP server is down
+	Update contributor list
+	Make sure dump is really on disk even with a buggy ext4fs
+	Build with OpenLDAP but not CURL (Matthias Scheler)
+	Do not complain about unreachable p0f daemon if it is unconfigured
+	Fix buffer overflow in SpamAssassin support (Enrico Scholz)
+	Fix socket mode in sample config file
+	Build fix on tru64 and Solaris
+	4.2 Branch forked
+4.1.12
+	Build fix for missing STAILQ_* macros
+4.1.11
+	Evaluate list clases in forward order (Rudy Eschauzier)
+	Fix crashes on regex substring matches (Rudy Eschauzier)
+4.1.10
+	Build fix as some commits were missing
+4.1.9
+	Workaround "peer queue overflow" bugs (Laurence Moindrot, Jean Benoit)
+4.1.8
+	Allow regex on properties
+	Allow extended regex substitution 
+	Custom headers can now be added to the message
+	Fix build with both SpamAssassin and SPF (Joel Bertrand)
+4.1.7
+	Add p0f-required macros in milter-greylist.m4 (Joel Bertrand)
+	Fix memory leak (Constantine A. Murenin)
+	Add option to match exact domain instead of substrings (Rick Adams)
+	Make sure no message chunks is skip at Data stage ACL (Manuel Badzong)
+	Removes duplicate <> in SpamAssassin headers (Manuel Badzong)
+	Fixes a flaw in SpamAssassin initialization (Manuel Badzong)
+        Support SpamAssassin spf and dkim checks (Manuel Badzong)
+	Make sure DKIM code does not use invalid pointers
+	Add libspf2 support to .spec file for RPM (Joe Pruett)
+	Solaris build fix (Johann Klasek)
+	Fix memory leak in SpamAssassin code (Manuel Badzong)
+	Make implicit default rule at DATA stage silent (Greg Troxel)
+4.1.6
+	Fix parse bug for "domain no" clause
+	Spamassassin support (Manuel Badzong)
+	Support for DATA-stage greylisting (Manuel Badzong)
+	Allow syslog facility to be configured (Joe Pruett)
+	Allow logging to be disabled on a per-ACL basis (Joe Pruett)
+	Honour $CPPFLAGS in Makefile (Greg Troxel)
+	p0f support
+	Experimental DKIM support (nobody tested it)
+	libspf2 support in .spec file, for RPM generation (Joe Pruett)
+	status support in Debian startup script (Bernhard Schneider)
+4.1.5
+	Fix huge memory leaks in native LDAP support
+4.1.4
+	Native LDAP support through OpenLDAP
+4.1.3
+	Fix build of SPF code
+	Fix build of GeoIP code
+4.1.2
+	Fix auth and tls clauses in ACL so that they accept regex
+	Update Debian startup script (Adam Katz)
+	Fix bogus ACL when using features not compiled in
+	Fix a crash when using SPF (Johann Klasek)
+	Fix Typos
+4.1.1
+	Fix corruption in urlcheck parsing (Benoit Branciard)
+	Document what package contains libmilter
+	Fix error about stat in greylist.conf (Bob Smith)
+	Add configurable dumpfile permissions
+	Avoid C99 specific syntax (Greg Troxel)
+	Documentation fixes
+	Add SPF status selection to ACL
+	Add id string to ACL
+	Fix typos in documentation (Constantine A. Murenin)
+4.0
+	More 4.0 features examples to default greylist.conf
+4.0rc2
+	Fix %E and %R format substitution that sometime returned bogus results
+	Report time taken by DNSRBL and urlcheck lookups (Benoit Branciard)
+	Document milter timeouts, RPM generation
+	Add 4.0 features examples to default greylist.conf
+	Update contributor list
+4.0rc1
+	Accept --disable-dnsrbl without a bug
+	Fix message size when multiple messages are sent in one session
+	Do not build fd_pool.c if it is not used
+4.0b4
+	Add missing bits for Solaris 256 stream limitation workaround
+	Fix build problem on Solaris
+	Documentation fix (Tim Mooney)
+4.0b3	
+	Warn in README that bison may be required for buidling
+	Fix configure error on Solaris (Tim Mooney)
+	Workaround for Solaris 256 stream limitation (Johann E. Klasek)
+	Fix spelling errors (Nerijus Baliunas)
+	Restore build for systems like Tru64 where ld does not acccept -R
+	Cleanup temporary file after DB dump failure (Johann E. Klasek)
+	Handle libc that fails stdio without setting errno (Johann E. Klasek)
+	Fixes the usage of the thread-proof resolver library (Johann E. Klasek)
+	Do not quit on non fatal errors (Johann E. Klasek)
+	Display ACL when matching whitelist ACL (Benoit Branciard)
+	Add troubleshooting in README (Rogier Maas)
+4.0b2
+	Treat protocol errors in urlcheck clauses as temporary failures
+	Report missing SPF reasons in X-Greylist (Benoit Branciard)
+	Allow building objects outside of source directory (Mattheu Herrb)
+	Fix configure LDFLAG generation, -R was missing (Mattheu Herrb)
+	Fix MX sync on Solaris (Mattheu Herrb)
+4.0b1
+	Add checks against libmilter giving us NULL private structure
+	Properly reset message filters when handling MAIL FROM after DATA
+	Allow rcpt clause in dacl statement, as documented
+	Add google pools to default greylist.conf
+	Add hooks for libdmalloc
+	Improve debug message (Yaroslav Boychuk)
+	Improve GeoIP status report in X-Greylist (Hideki ONO)
+4.0a6
+	Avoid GeoIP reporting "--" for broken domain (Bernhard Schneider )
+	Fix run-away string (AIDA Shinra)
+	Check for libbind9 if libbind cannot be found (Fabien Tassin)
+	Document ACL on TLS DN (Fabien Tassin)
+	Avoid spurious exit on DATA stage ACL match for multiple recipients
+4.0a5
+	Don't use YY_FLUSH_BUFFER, use flush_buffer() instead (AIDA Shinra)
+4.0a4
+	Fix upgrade pitfal, where write access to the PID file is missing
+	Back out a Debian build fix that broke other systems
+4.0a3
+	Add an urlcheck reply which is ignored: milterGreylistIgnore 
+	Build fixes for Debian (Bernhard Schneider)
+	Add a configure flag to not use --rpath (Bernhard Schneider)
+	Cleanup stale PID file on startup (Bernhard Schneider)
+	Fix memory leak with DNSRBL (Michael Fromme)
+4.0a2
+	For urlcheck answer, cope with a trailing line not terminated by CR
+	Fix X-Greylist lossage (AIDA Shinra)
+	Fix garbled log (Bernhard Schneider)
+	Fix build on Tru64 (Attila Bruncsak)
+4.0a1
+	Fix again an accept-all-bug when built with SPF (AIDA Shinra)
+	Fix macro handling in ACL (AIDA Shinra)
+	%% syntax in format strings (AIDA Shinra)
+	Clarified "%Xm" and "%Xh" semantics (AIDA Shinra)
+	Fixed a memory leak at mlfi_eom (AIDA Shinra)
+	Fix a bug where doing RCPT twice when blacklised succeed (AIDA Shinra)
+3.1.8
+	Allow filtering on the HELO string
+	Back out previous SPF fix, it caused accept-all with SPF-less builds
+3.1.7
+	Fix an accept-all-bug when built with SPF (AIDA Shinra)
+	Option to perform urlchecks in forked instance to avoid thread-unsafety
+	Allow escaping of " in strings and / in regex
+	Fix whitelisting using access.db (Georg Horn)
+	Fix NULL pointer referencing in urlcheck code
+	Fix body storage so that locators (^ and $) work for body regex
+	Fix spurious warning about unknown whitelisting conditions
+	Fix memory leaks when using urlchecks
+	Makes urlcheck properties and values case insensitives
+	Do not retain urlcheck properties if the urlcheck clause did not match
+	Allow loading regex in lists of body clauses
+	Option to clear urlcheck prop before handling a new recipient
+	%D format string for getting the list of matching DNSRBL
+	Avoid performing multiple DNSRBL checks for the same IP
+	Allow reusing in the ACL of properties gathered from urlcheck
+	Fix wrong display of %Xc %Xe and %Xh substitutions 
+	Fix documentation: %Xh instead of %Xr
+	stat should not report X-Greylist header is message was rejected
+	Fix a documentation bug: sender e-mail is %f, not %s
+3.1.6
+	More format strings, for SMTP code, extended code, message, header
+	Fix a crash when using regex without grouping ()
+	Document the CVS location in README
+3.1.5
+	Fix double free when using content filtering
+	ACL clauses can now be negated
+	msg clauses in ACL can use format strings substitution
+	Add an ACL clause to customize X-Greylist header
+	Fix serious bugs in DNSRBL code (Jacques Beigbeder)
+	Fix a display bug for netblocks
+	Add a time clause to match against time sets
+	GeoIP support, through the geoip clause
+	Fix warning for Postfix build (Nerijus Baliunas)
+	%g for substitution by regex back references
+	%I for susbtitution by sender IP masked by a CIDR
+	Allow specifying socket mode in config file
+	Set default user to root for .spec file
+	Do not drop root privs if we do not run as root
+3.1.4
+	Add support for switching to a given group (Ralf S. Engelschall)
+	Add substitutions for sendmail macro and strftime in URL checks
+	Add custom logs of milter-greylist actions, see stat in greylist.conf
+	Fixes for running with Postfix (Nerijus Baliunas)
+	Fix configure problem with DNSRBL on Linux (Andrew McGill)
+	Document how to use milter-greylist with Postfix (Nerijus Baliunas)
+	Update .spec for Postfix (Nerijus Baliunas)
+	Optionnaly post the message body to an URL check at DATA stage
+	Integrate SPF, SMTP AUTH and STARTTLS in ACL
+	Add msgsize and rcptcount clauses to ACL
+	Allow rcpt clause at DATA stage ACL
+	Fix crashes when running with -D on some systems (John Thiltges)
+	Do not sort the databases, it makes startup slow and buys nothing
+3.1.3
+	Fix various bugs (regex searches, lists matches, uninitialized memory)
+3.1.2
+	Fix timespamp on sparc64 (Gert Doering)
+	Add the ability to query extrnal sources in ACL using URL 
+	Add connection pools for URL queries to enable persistent connections
+	Fix dependency in rc-bsd.sh: it's mail, not sendmail
+	Add DATA-stage ACL
+	Update to .spec file (Rudy Eschauzier)
+	Allow header and body searches in DATA-stage ACL
+	Allow CIDR match for DNSRBL
+	Allow multiple macro, dnsrbl, urlcheck, body and header clauses in ACL
+3.1.1
+	Fix crashes during dump reloads (AIDA Shinra)
+	Fix DoS in MX sync protocol (AIDA Shinra)
+	Check for -lc_r before others, for FreeBSD (AIDA Shinra)
+	Fix configure for libspf2 (AIDA Shinra)
+	Fix FreeBSD build (AIDA Shinra)
+	Avoid buffer overflow in DNSRBL code (AIDA Shinra)
+	Fix build problem with newer BerkeleyDB (AIDA Shinra)
+	Check if -lbind requires -lpthread, for Linux
+	Correctly enable non blocking I/O fox MX sync (Attila Bruncsak)
+	Pointer to DRAC documentation (Matthias Scheler)
+	FreeBSD build fixes (Hajimu UMEMOTO)
+	Remove the /tmp/access-list.debug for security sake (AIDA Shinra)
+	Fix display bug in log messages (AIDA Shinra)
+	Updated the list of broken MTA
+	Fix MX sync between Tru64 and Linux (Attila Bruncsak)
+	Silly build fix for platforms that lack vsyslog()
+	Honour LINE_MAX for syslog (Attila Bruncsak)
+	Warn about ignored ACL lines after acl default rule
+	Fix various race conditions (AIDA Shinra)
+	Fix big bugs in macro support (AIDA Shinra)
+	Fix build warning on Tru64
+	Build fix on Solaris
+	Documentation fix
+3.0a5
+	Build fix on Tru64, fix MX sync (Attila Bruncsak)
+	Fix various race conditions (AIDA Shinra)
+3.0a4
+	IPv6 and build fixes (Hajimu UMEMOTO)
+3.0a3
+	Fix --disable-drac and --disable-dnsrbl (Fabien Tassin)
+	Add support to use Sendmail macros in the ACL
+	Remove the need of LOG_PERROR, make sure no log is missed
+	Make sure -c tells what happens and return an usable exit code
+3.0a2
+	Documentation fix about required sendmail macros
+	Missing bit in rc-redhat.sh (Jobst Schmalenbach)
+	Fix bugs that prevented IPv6 addresses resolution
+	Add more log output for blackist and flushaddr (Fabien Tassin)
+	Allow rejecting by tempfail on blacklist configuration (Fabien Tassin)
+3.0a1
+	Build fix
+2.1.12
+	IPv6 fixes again (Hajimu UMEMOTO)
+	Build fix on FreeBSD
+	per-ACL SMTP error code and messages
+2.1.11
+	IPv6 fixes (Hajimu UMEMOTO)
+	flushaddr flag for access lists, which flush an IP from the database
+2.1.10
+	Multi-line statement in the config file
+	Fix crash when using -c and lists or acl
+	Build fixes
+2.1.9
+	Handle FreeBSD 5.2 DNS resolver for DNSRBL (Hajimu UMEMOTO)
+	Build fixes for Linux (Hajimu UMEMOTO)
+	Fix uninitialized string (Hajimu UMEMOTO)
+2.1.8
+	acl blacklist feature
+2.1.7
+	Per-ACL greylisting and autowhitelisting delays
+	DNSRBL support in ACL
+	Report matching ACL line number in the logs
+	Lists for from, rcpt, domain, netblocks and DNSRBL
+2.1.6
+	Make log output consistent (Fredrik Pettai)
+2.1.5
+	Build fix (Attila Bruncsak)
+2.1.4
+	Fixes to bucketed databases when using lazyaw (Ranko Zivojnovic)
+	Tell local connections are non IP instead of non IPv4 (Attila Bruncsak)
+	Faster ACL code (Attila Bruncsak)
+	Option to log expired entries (Jeff Rife)
+	Cosmetic changes in debug logs (Fredrik Pettai)
+2.1.3
+	Build fix for IPv6 (Ranko Zivojnovic)
+	Build on systems without IPv6 scope ID (Hajimu UMEMOTO)
+2.1.2
+	Missing SPF 2 bit (Hajimu UMEMOTO)
+	Selectable MX sync source address (Guido Kerkewitz)
+2.1.1
+	Bucketed in-memory databases for better concurency (Ranko Zivojnovic)
+	Large buffer for writing the dump file (Ranko Zivojnovic) 
+	Option to disable human-readable date in dumps (Ranko Zivojnovic)
+	Check for MXsync sends (Ranko Zivojnovic) 
+	Better handle non fatal I/O errors in MXsync (Ranko Zivojnovic)
+	Fix ACCESSDB whitelist with multiple recipients (Alexander Lobodzinski)
+	DRAC support (Romain Kang)
+	Log hostname as well as IP in ACL debug (Alexey Popov)
+	Record HELO for SPF 2 (Hajimu UMEMOTO)
+2.0.2:
+	Fix memory leak within MX sync code (Hajimu UMEMOTO)
+2.0.1:
+	correctly update autowhitelist when subnetmask is used (Attila Bruncsak)
+	Fix deadlock in autowhitelisting code (Attila Bruncsak)
+	Avoid using inet_makeaddr because it breaks on IRIX (Pavel Cahyna)
+	Check if -D_SGI_SOURCE is needed on IRIX
+	Document ABI problems on IRIX (Pavel Cahyna)
+	Remove reload by SIGHUP in rc-debian.sh (Pavel Cahyna)
+	Add support for newer libspf2 (Hajimu UMEMOTO)
+2.0:
+2.0rc5:
+	Fix suffix match for the domain clause (Martin Paul)
+2.0rc4:
+	Perform suffix match for the domain clause (Martin Paul)
+	Documentation fixes (Martin Paul)
+2.0rc3:
+	Missing options in usage (Martin Paul)
+	SPF build fix
+2.0rc2:
+	Bug fix in address comparison code	
+2.0rc1:
+	README table of content
+	README spell check (Martin Paul)
+	Fix memory leak (Hajimu Umemoto)
+	dependency in .spec file: sendmail 8.11 only is required
+2.0b7:
+	Split installation targets (Elrond)
+	nroff man pages (Fredrik Pettai & Martin Paul)
+	Updated contributors list in man pages
+2.0b6:
+	Fix timing bug for messages arriving on greylist timeout (Martin Paul)
+	Install formatted man page that can be displayed on Solaris
+2.0b5:
+	Missing bits from the 2.0b4 fix
+2.0b4:
+	Fix MX sync bug on Solaris, shut up warnings at build time
+2.0b3:
+	Add extendedregex option for using extended regex (Matt Kettler)
+	Updated .spec file for running without root privs (Ivan F. Martinez)
+	rc-redhat.sh: move PID file somewhere we can write (Petr Kristof)
+	Fix build problem with spf
+	Fix bad DESTDIR specification for /etc/mail
+	Change e-mail matching scheme to exact match instead of substring match
+2.0b2:
+	Check if -D_REENTRANT is needed for localtime_r and friends
+	Typo in delayedreject 
+	Check for initgroups existence
+	Add more E-bay addresses in greylist.conf
+	Drop \ for multi-line ACL as it break builds with some version of yacc
+2.0b1:
+	Shut down warnings in tolower()
+	Use initgroups() on startup to kill suplementary groups
+	Fix build problem on IPv6 disabled systems.
+	Fix build problem with libpsf
+	Fix rc-redhat startup order, drop root before starting the daemon
+	Updated .spec file (Ivan F. Martinez)
+1.7.5:
+	Documentation fixes (Gary Aitken, Per Holm)
+	New broken site in the default whitelist
+	Generate .spec file from configure
+	Differentiate errors in dump file and config file
+	Fix a build problem if getaddrinfo is absent (Lev Walkin)
+	Don't sync with local addresses on FreeBSD 4.9 (Lev Walkin)
+	Add a commented line for ::1 whitelisting in greylist.conf
+	Delayed reject to cope better with sender callback (Moritz Both)
+1.7.4:
+	M4 file for easier sendmail.cf generation (Ivan F. Martinez)
+	.spec file for generating RPM (Ivan F. Martinez)
+	Install ${DESTDIR}etc/mail for sandbox builds
+	Fix build problem
+1.7.3:
+	SUSe startup script, by Stephane Lentz
+	Builds again with SPF enabled
+	Update doc: flex is required
+	Prefix all install paths by ${DESTDIR} to help sandbox builds for RPM
+	Pull config from /etc/sysconfig/milter-greylist in rc-rdehat.sh
+	Whitelist when sendmail sets ${greylist} to WHITE (Ivan F. Martinez)
+1.7.2:
+	Support libspf2 (Eugene Crosser)
+	New ACL framework for whitelist and greylist (Remy Card)
+	Tell MX peers about autowhitelist prolongation (Remy Card)
+	Documentation cleanup
+	Update the Broken MTA list
+1.7.1:
+	Null after 1.6 tag release to help patch contributions
+1.6:
+	New stable branch
+	Missing flags in milter-greylist usage display
+	Gentoo startup sript (Stephane Lentz)
+	rc-linux.sh was renamed rc-redhat.sh
+1.5.12:
+	More broken servers in the default config file
+	Fix wrong sync queue counter computations (Attila Bruncsak)
+	Add a -c option to just check the config and exit (Klas Heggemann)
+1.5.11:
+	Don't block threads while reloading config (Attila Bruncsak)
+	Allow regex with # in the configuration (Hajimu Umemoto)
+	Ignore self as sync peer (Matthias Scheler and Hajimu Umemoto)
+	Document ressource shortage for memory and file descriptor
+	Remove outdated documentation about IPv6
+1.5.10:
+	Fix a build problem on systems that don't have IPv6 (Hajimu Umemoto)
+	Fix a minor bug with SPF (Hajimu Umemoto)
+1.5.9:
+	Give credits to the various contributors in the man pages
+	Do not match bogus IPv6 addresses in the dump file (Hajimu Umemoto)
+	Quick statistics at the end of the dump file (Remy Card)
+	Fix build on Tru64 Unix, including for IPv6 (Attila Bruncsak)
+	Fix a SPF log problem (Alexandre Cherif)
+1.5.8:
+	Fix a bug in configure.ac (Hajimu Umemoto)
+1.5.7:
+	malloc e-mail addresses, avoids truncation at 32 chars (Hajimu Umemoto)
+1.5.6:
+	Configurable MX sync bind port and address (Cyril Guibourg)
+1.5.5:
+	Disable getnameinfo as in causes an ABI clash in Linux
+	Fix bad substitutions in rc scripts
+	Fix build problems on Solaris
+1.5.4:
+	Avoid race conditions when reloading the config (Attila Bruncsak)
+	Full blown IPv6 support, from Hajimu Umemoto
+	rc-debian.sh script, from Joel Bertrand
+1.5.3:
+	Fix unproper MX sync port on little endian machines
+1.5.2:
+	Add a template Makefile to manually tweak if configure fails
+	Feed strtkok_r with a NULL initialized pointer
+	More mixed I/O fix: another fflush after a fgets() 
+1.5.1:
+	Fix mixed I/O in MX sync on Solaris, from Attila Bruncsak
+	Check that compiler and linker accept -Wall
+	Document the comment on end of line bug
+	Clean up rc-solaris.sh on make clean
+	syslog the expired autowhite entry correctly, from Mattieu Herrb
+	Handle mailing lists with unique sender by removing '^.*=' from sender
+	Minor bug fixes in queue management from Wolfgang Solfrank
+1.4:
+	New stable branch
+1.3.9:
+	Solaris rc script from Christian Pelissier
+	Correctly check pthread function return values
+	Avoid using a thread for the initial config file load (useless)
+	Bug fix: Domain regex were not freed on config file reloads	
+	Bug fix: Timeout parmaeter was not honoured everywhere
+1.3.8:
+	Shut up  a warning at build time
+1.3.7:
+	Bug fix: on some platforms, reloading the config caused SIGSEGV
+1.3.6:
+	Big bug fix: rcpt keywords did not work anymore without regex	
+	Case-insensitive regular expression matching
+1.3.5:
+	Fix install bug on some platforms (permissions)
+	Use CC as defined by configure, fix the build on Solaris
+	Build fix in Yacc file
+1.3.4:
+	DNS support in greylist.conf through the domain keyword
+	Make the greylist timeout a config file option
+1.3.3:
+	Bug fix: lazyaw did not work properly in some situations
+	Final dump on milter-greylist exit
+	Case insensitive check for autowhitelist everywhere (was inconsistent)
+	Better scallability by adjusting the dump delay
+	Work with NetBSD 2.0 native libpthread
+1.3.2:
+	Support STARTTLS (Contribution from Matthieu Herrb)
+	Add a list of broken MTA in the default whitelist
+	Fix a bug that caused wrong delay time.
+1.3.1:
+	Documentation about MX sync and firewalls
+	Case insensitive autowhitelist e-mail addresses checks
+	Introduce a lazyaw option to match only IP addreses in autowhitelist
+	Remove fake error message on dump reload  (make the LOG_DEBUG)
+	List build dependenvies in README
+1.1.16:
+	More buid problems on FreeBSD 
+1.1.15:
+	Fix build problems on FreeBSD
+1.1.14:
+	in greylist.conf, make the netmask opttionnal (default to /32)
+1.1.13:
+	Handle non IPv4 addresses correctly.
+1.1.12:
+	Bug fix: Using regex in rcpt line caused the program to halt
+1.1.11:
+	Use the HELO domain for SPF checks (usefull when getting mail from <>)
+1.1.10:
+	Support libspf
+	Initialisation scripts
+	Write the pidfile before changing UID (/var/run is not world-writable)
+	Add a config option to suprress the X-Greylist header
+1.1.9:
+	Build problems on some Linux systems
+1.1.8:
+	Build again on Tru64 Unix and Darwin
+	Use regex for from and rcpt config lines
+1.1.7:	
+	Read the queue Id at envfrom stage, else we miss it there.
+1.1.6:
+	Only log debug messages when verbose mode is enabled
+	Bugfix: libspf_alt use was not thread safe.
+	Reorder tests to minimize DNS lookups with SPF
+	Buygfix: when using a delay in config file, we overwrote some memory
+	Fix build problems on Linux
+1.1.5:	
+	Bugfix: the dumpfile was not set correctly on command line
+	Bugfix: correctly reset defaults before reloading the config
+	Clear a warning on Solaris build
+	Bugfix: The subnet match mask was not set in the configuration file
+1.1.4:
+	Better libspf testing in configure
+	Add flag equivalents to the config file
+1.1.3:
+	Bugfix: without SPF enabled, everything was accepted
+1.1.2:
+	SPF support with libspf_alt
+1.1.1:
+	Added a -P pidfile option to dump PID to a file
+	smfi_getsymval does not set errno, so don't display strerror
+	SMTP AUTH support
+	Accept any e-mail address as specified in RFC 2821 from config and dump
+	Add a -L flag for subnet matching (ad-hoc hack for MTA farms)
+	Use setsid() to detach from the terminal
+	Fix the mising units in ps output for -a and -w
+	Fix typos
+1.0: First stable release

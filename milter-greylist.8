@@ -1,0 +1,399 @@
+.\"
+.\" $Id: milter-greylist.8,v 1.49 2016/01/03 05:06:32 manu Exp $
+.\"
+.\" Copyright (c) 2004-2009 Emmanuel Dreyfus
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"        This product includes software developed by Emmanuel Dreyfus
+.\"
+.\" THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED
+.\" WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+.\" OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+.\" DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+.\" ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+.\" OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.TH "milter-greylist" "8" "May 10, 2005" "" ""
+.SH NAME
+.B milter-greylist 
+- grey listing filter for sendmail
+.SH SYNOPSIS
+.B milter-greylist 
+[\fB-A\fR]
+[\fB-a \fIautowhite_delay\fR]
+[\fB-c\fR]
+[\fB-D\fR]
+[\fB-d \fIdumpfile\fR]
+[\fB-f \fIconfigfile\fR]
+[\fB-h\fR]
+[\fB-l\fR]
+[\fB-q\fR]
+[\fB-r\fR]
+[\fB-S\fR]
+[\fB-T\fR]
+[\fB-u \fIusername\fR[:\fIgroupname\fR]]
+[\fB-v\fR]
+[\fB-w \fIgreylist_delay\fR]
+[\fB-L \fIcidrmask\fR]
+[\fB-M \fIprefixlen\fR]
+[\fB-P \fIpidfile\fR]
+.B -p
+.I socket
+.SH DESCRIPTION
+.B milter-greylist
+is a mail filter for sendmail that implements grey listing,
+a spam filtering technique proposed by Evan Harris.
+.PP
+Grey listing works by assuming that contrarily to legitimate MTA, spam engines
+will not retry sending their junk mail on a temporary error. The filter
+will always temporarily reject mail on a first attempt, and 
+accept it after some time has elapsed.
+.PP
+If spammers ever try to resend rejected messages, we can assume they will 
+not stay idle between the two sends. Odds are good that the spammer will 
+send a mail to an honey pot address and get blacklisted in a distributed 
+black list before the second attempt.
+.PP
+Of course, the filter can be configured to not apply grey listing to some
+hosts or networks. You can whitelist friendly SMTP servers, and you should
+whitelist your own network, otherwise your SMTP clients will have real 
+trouble to send e-mail. Whitelisting localhost is also a must.
+.PP
+.B milter-greylist
+works with two files. 
+.I greylist.conf
+is the configuration file. It holds the whitelist of addresses that will 
+not suffer grey list filtering.  It is read once upon 
+.B milter-greylist
+startup, then it will be automatically reloaded whenever a new message
+gets in and if it had been modified. You should not send
+.B milter-greylist
+a kill -1 as it will just terminate it (libmilter works that way).
+.PP
+See 
+.B greylist.conf(5)
+for documentation on the file's format.
+.PP
+The second file is
+.I greylist.db\fR.
+.B milter-greylist
+will regularly dump its grey list database into this file, which is used
+on startup to restore the previous grey list state. If the file does not
+exist or is unreadable, 
+.B milter-greylist
+will start with an empty grey list. 
+.PP
+The default location for the grey list database and the socket for
+communicating with sendmail is
+.B /var/milter-greylist/\fR.
+That directory must be owned and writeable by the user id under
+which 
+.B milter-greylist
+runs.
+.PP
+The following options are available;
+if present, they override their equivalents specified in the 
+configuration file:
+.TP
+.B -A
+Normally, 
+.B milter-greylist
+does not greylist senders that succeeded SMTP AUTH. This option disables that
+feature and causes authentication to be ignored.
+Equivalent to the
+.I noauth
+option in the configuration file.
+.TP
+.B -a \fIautowhite_delay\fR
+Configure auto-whitelisting. After a tuple (sender IP, sender e-mail, 
+recipient e-mail) has been accepted, other identical tuples will get
+accepted for 
+.I autowhite_delay\fR.
+The default is one day. Use zero to disable auto-whitelisting.
+A suffix can be added to specify seconds (s), minutes (m), hours (h), 
+days (d) or weeks (w). Without any suffix, values are treated as seconds.
+Equivalent to the
+.I autowhite
+option in the configuration file.
+.TP
+.B -c
+Only check the configuration file and exit. Return value is 0 if the
+configuration is valid, or an error code from 
+.I <sysexit.h>
+otherwise.
+.TP
+.B -D
+Do not fork; run in the foreground instead. Without this flag, 
+.B milter-greylist
+will become a daemon.
+Equivalent to the
+.I nodetach
+option in the configuration file.
+.TP
+.B -d \fIdumpfile\fR
+Location of the dump file. Default is 
+.I /var/milter-greylist/greylist.db\fR.
+Equivalent to the
+.I dumpfile
+option in the configuration file.
+.TP
+.B -f \fIconfigfile\fR
+Location of the config file. Default is
+.I /etc/mail/greylist.conf\fR.
+.TP
+.B -h
+Show usage information.
+.TP
+.B -L \fIcidrmask\fR
+Use 
+.I cidrmask
+as a matching mask when checking IPv4 addresses entries in the greylist. This
+is aimed as a workaround to mail farms that re-emit messages from different
+IP addresses. With 
+.B -L 24\fR,
+the matching mask is 255.255.255.0, and all addresses within the same class C
+network are considered the same. Default is 
+.B -L 32\fR, 
+which corresponds to all addresses considered different.
+.TP
+.B -M \fIprefixlen\fR
+Use 
+.I prefixlen
+as a matching mask when checking IPv6 addresses entries in the greylist. This
+is aimed as a workaround to mail farms that re-emit messages from different
+IP addresses. With 
+.B -M 64\fR,
+the matching mask is ffff:ffff:ffff:ffff::, and all addresses within the same
+subnet are considered the same. Default is 
+.B -M 128\fR,
+which corresponds to all IPv6 addresses considered different.
+.TP
+.B -l
+Enable debug output in the access-list management code.
+.TP
+.B -P \fIpidfile\fR
+write the daemon's PID to 
+.I pidfile\fR.
+Equivalent to the
+.I pidfile
+option in the configuration file.
+.TP
+.B -p \fIsocket\fR
+Use 
+.I socket
+as the socket used by 
+.B sendmail(8)
+to communicate with
+.B milter-greylist\fR.
+.TP
+.B -q
+Quiet mode. 
+.B milter-greylist
+will not tell SMTP clients how much time they have to wait before the
+message will be accepted.
+Equivalent to the
+.I quiet
+option in the configuration file.
+.TP
+.B -r
+Display 
+.B milter-greylist
+version and build environment, then exit.
+.TP
+.B -S
+If
+.B milter-greylist
+was built with SPF support, then SPF-compliant senders bypass greylisting.
+This flag causes messages to be greylisted regardless of whether they are 
+SPF-compliant or not.
+Equivalent to the
+.I nospf
+option in the configuration file.
+.TP
+.B -T
+Enable test mode. This alters the meaning of 
+.I rcpt
+lines in 
+.I greylist.conf\fR,
+so that only messages sent to recipient addresses listed there are 
+selected for greylisting. This option and the 
+.I rcpt
+lines have been deprecated in favor of ACL, so do not use it. 
+.TP
+.B -u \fIusername\fR[:\fIgroupname\fR]
+Drop root privileges and switch to 
+.I username
+(and optionally
+.IR groupname )
+credentials. Make sure this user (and group) has write access to
+.I greylist.db\fR.
+Equivalent to the
+.I user
+option in the configuration file.
+.TP
+.B -v
+Enable debug output. 
+.B milter-greylist 
+will send messages (and debug output if it is given the
+.B -v
+flag) to 
+.B syslogd(8)
+with facility LOG_MAIL.
+Equivalent to the
+.I verbose
+option in the configuration file.
+.TP
+.B -w \fIgreylist_delay\fR
+sets the minimum delay between the first attempt and the time
+the message can be accepted. Default is 30 minutes. 
+A suffix can be added to specify seconds (s), minutes (m), hours (h), 
+days (d) or weeks (w). Without any suffix, values are treated as seconds.
+Equivalent to the
+.I greylist
+option in the configuration file.
+.SH GREYLIST MX SYNC
+.B milter-greylist
+is now able to sync the greylist between multiple MX. In order to enable
+this feature, you need to list the peer MXs in 
+.B greylist.conf(5)
+like this:
+.PP
+  peer 192.0.2.17
+  peer 192.0.2.18
+.PP
+When peers are configured, 
+.B milter-greylist
+will listen on the port defined for the mxglsync service in
+.I /etc/services 
+(defaults to 5252), and it will connect to peers at this port. Each time 
+an entry is added or deleted on one MX, it will be propagated to 
+the others. 
+.PP
+The protocol is quite simple, just
+telnet to your MX at port 5252, and type 
+.I help
+to see how it works. Note that
+connections will only be accepted from peer MXs, even localhost will be
+rejected (and don't ever add localhost as a peer for MX sync, as you will 
+cause each entry in the greylist to be added twice).
+.PP
+If an MX is down, changes to the greylist will be queued until it gets
+back up again. The queue length is limited (default is 1024 entries), and
+if it overflows, newer entries will be discarded.
+.SH AUTHORS
+Emmanuel Dreyfus <manu@netbsd.org>
+.PP 
+.B milter-greylist
+received many contributions from (in alphabetical order):
+Adrian Dabrowski,
+Aida Shinra,
+Adam Katz,
+Alexander Lobodzinski,
+Alexandre Cherif,
+Alexey Popov,
+Andrew McGill,
+Attila Bruncsak,
+Benoit Branciard,
+Bernhard Schneider,
+Bob Smith,
+Constantine A. Murenin,
+Chris Bennett,
+Christian Pelissier,
+Cyril Guibourg,
+Dan Hollis,
+David Binderman,
+Denis Solovyov,
+Elrond,
+Enrico Scholz,
+Eugene Crosser,
+Fabien Tassin,
+Fredrik Pettai,
+Gary Aitken,
+Georg Horn,
+Gert Doering,
+Greg Troxel,
+Guido Kerkewitz,
+Hajimu Umemoto,
+Hideki ONO,
+Ivan F. Martinez,
+Jacques Beigbeder,
+Jean Benoit,
+Jean-Jacques Puig,
+Jeff Rife,
+Jim Klimov,
+Jobst Schmalenbach,
+Joe Pruett,
+Joel Bertrand,
+Johann E. Klasek,
+Johann Klasek,
+John Thiltges,
+John Wood,
+Jorgen Lundman,
+Kazuyuki Yoshida,
+Klas Heggemann,
+Kouhei Sutou,
+Laurence Moindrot,
+Lev Walkin,
+Manuel Badzong,
+Mart Pirita,
+Martin Paul,
+Matt Kettler,
+Mattheu Herrb,
+Matthias Scheler,
+Matthieu Herrb,
+Michael Fromme,
+Moritz Both,
+Nerijus Baliunas,
+Ole Hansen,
+Pavel Cahyna,
+Pascal Lalonde,
+Per Holm,
+Petar Bogdanovic,
+Petr Kristof,
+Piotr Wadas,
+R P Herrold,
+Ralf S. Engelschall,
+Ranko Zivojnovic,
+Remy Card,
+Rick Adams,
+Rogier Maas,
+Romain Kang,
+Rudy Eschauzier,
+Stephane Lentz,
+Steven Hiscocks,
+Thomas Scheunemann,
+Tim Mooney,
+Vincent Dufresne,
+Wolfgang Solfrank, and
+Yaroslav Boychuk.
+.PP
+Thanks to 
+Helmut Messerer
+and
+Thomas Pfau
+for their feedback on the first releases of this software.
+.SH SEE ALSO
+greylist.conf(5),
+sendmail(8), 
+syslogd(8).
+.TP
+Evan Harris's paper:
+.I http://projects.puremagic.com/greylisting/
+.TP
+milter-greylist's web site:
+.I http://hcpnet.free.fr/milter-greylist/

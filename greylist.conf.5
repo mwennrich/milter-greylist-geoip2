@@ -1,0 +1,1651 @@
+.\"
+.\" $Id: greylist.conf.5,v 1.132 2016/11/24 04:11:37 manu Exp $
+.\"
+.\" Copyright (c) 2004-2013 Emmanuel Dreyfus
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"        This product includes software developed by Emmanuel Dreyfus
+.\"
+.\" THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED
+.\" WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+.\" OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+.\" DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+.\" ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+.\" OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.TH "greylist.conf" "5" "May 10, 2005" "" ""
+.SH NAME
+.B greylist.conf
+- milter-greylist configuration file
+.SH DESCRIPTION
+.B greylist.conf 
+configures 
+.B milter-greylist(8)
+operation. The format is simple: each line contains a keyword and 
+optional arguments. Any line starting with a # is considered as a comment
+and is ignored. Blank lines are ignored as well. Comments at the end of
+lines are accepted in some situations, but do not take them as granted.
+A statement can be continued on the next line by using a backslash. Anything
+after the backslash will be ignored.
+.SH WHITELIST
+The primary use of 
+.B greylist.conf
+is to setup 
+.B milter-greylist(8)
+whitelist. It also offers a handy blacklist feature. 
+Access-lists (ACL) are used to do that. ACL enable the administrator 
+to specify complex conditions on sender IP, sender DNS address,
+sender e-mail address, and recipient e-mail address. If support for
+DNSRBL was built-in, it is even possible to use DNSRBL in ACL.
+.PP
+An access-list entry starts with the
+.I racl
+keyword followed by an optional id quoted string, then the
+.I greylist\fR,
+.I whitelist\fR,
+.I blacklist\fR,
+or
+.I continue
+keyword, and by any set of the following clauses: 
+.I addr\fR,
+.I domain\fR,
+.I from\fR,
+.I rawfrom\fR,
+.I rcpt\fR,
+.I rcptcount\fR,
+.I helo\fR,
+.I sm_macro\fR,
+.I time\fR,
+.I auth\fR,
+.I tls\fR,
+.I spf\fR
+(if build with SPF support),
+.I geoip\fR
+(if build with GeoIP support),
+.I p0f\fR
+(if build with p0f support),
+.I ldapcheck\fR
+(if build with --with-openldap),
+.I urlcheck\fR
+(if built with --with-libcurl),
+.I dnsrbl\fR
+(if built with --enable-dnsrbl), and
+.I nsupdate\fR
+(if supported by the DNS resolver).
+A message will match an ACL entry when it complies with all of its clauses.
+.PP
+The
+.I greylist\fR,
+.I whitelist\fR,
+and
+.I blacklist
+keywords will cause the message to be respectively greylisted, accepted 
+or rejected if all ACL clauses match, and ACL evaluation is terminated
+there. If an ACL with 
+.I continue
+keyword does match, nothing is decided and next ACL are evaluated.
+.PP
+Clauses can be negated, by prefixing them by the
+.I not
+keyword. Here is the detail of all possible clauses.
+.TP
+.I addr
+This clause is used to specify a netblock of source IP 
+addresses. The syntax is an IP address followed by a slash and a CIDR
+netmask. Here is an example:
+.IP
+  racl whitelist addr 127.0.0.0/8
+  racl whitelist addr 192.168.3.0/24
+  racl whitelist addr ::1
+.IP
+If the netmask is omitted, /32 is assumed for an IPv4 address and
+/128 is assumed for an IPv6 address.
+.IP
+You should at least whitelist localhost (127.0.0.1/8), and if you have
+some user clients connecting to the machine, you should whitelist the
+addresses they connect from if you don't want them to get error 
+messages when sending e-mail.
+.TP
+.I domain
+This clause selects source machines based on their DNS name, performing 
+a suffix search.
+For instance, this will whitelist any machine in the 
+.I example.net
+domain:
+.IP
+  racl whitelist domain example.net
+.IP
+Suffix search matching  means, for example, that gle.com will match 
+google.com. If you want domain names to match on subdomain boundaries 
+(e.g.  gle.com will match mail.gle.com and gle.com but not google.com) 
+then enable 
+.I domainexact
+.PP
+The name resolution is made by Sendmail, which hands it to 
+.B milter-greylist(8)\fR.
+As a result, it is impossible to use DNS aliases here. On the other
+hand, this will work even if your DNS resolver is not thread-safe.
+.TP
+.I from
+This is used to select sender e-mail addresses You should not use
+that feature, because sender e-mail addresses can be trivially forged.
+
+Please note that the sender e-mail is cleared from spaces
+and anything leading an equal (=) sign so that mailing-lists
+return-address with unique return paths can still match. 
+If you need unedited sender address, use a
+.I rawfrom 
+clause.
+
+Here is an example:
+.IP
+  racl whitelist from postmaster@example.com
+.TP
+.I rawfrom
+Same as 
+.I from
+but the sender e-mail address is not modified to stip anything.
+.I rcpt
+This is used to select recipient addresses. Example:
+.IP
+  racl greylist rcpt John.Doe@example.net
+.TP
+.I rcptcount
+Followed by an operator and a recipient count, this is used to select the
+amount of recipients. Example:
+.IP
+  racl blacklist rcptcount >= 25 msg "No more than 25 recipients, please"
+.TP
+.I helo
+Followed by a quoted string or a regular expression, this can be used to
+filter on the HELO string.
+.TP
+.I sm_macro 
+This is used to select a Sendmail macro value. See the section on that
+topic for more information.
+.TP
+.I time
+This is used to specify a time set. It should be followed by a quoted string
+of 
+.B crontab(5)\fR-like
+time specification. Here is an example that whitelists mail addressed to a 
+single recipient during office hours (from 8:00 to 16:59 from monday to friday):
+.IP
+  racl whitelist time "* 8-16 * * 1-5" rcpt info@example.net
+.TP
+.I geoip
+This is used to specify a country, as reported by GeoIP. The country code
+must be upper case, and is only available if 
+.B milter-greylist
+was built with GeoIP support. Special country code 
+.B ZZ
+is used when the country cannot be determined (this happens for private
+addresses, for instance). The 
+.I geoipdb 
+statement can be used to specify the location of GeoIP database. 
+.I geoipv6db
+statement can be used to specify the location of GeoIPv6 database.
+.TP
+.I p0f
+This is used to match against the remote system OS fingerprint genre and
+detail,obtained from p0f. It is only available if 
+.B milter-greylist
+was built with p0f support. 
+.I p0f
+clauses can be used with a quoted string for case-insensitive substring
+match, or against regular expressions. The
+.I p0fsock
+statement can be used to specify the location of the p0f socket.
+.TP
+.I auth
+This is used to select a user that succeeded SMTP AUTH. In order to select
+any user that succeeds SMTP AUTH, you can use a regular expression matching,
+like below;
+.IP
+  racl whitelist auth /.*/
+.IP
+Using such a clause automatically disable global STARTTLS and
+SMTP AUTH whitelisting, like if the
+.I noauth
+keyword would have been used.
+.TP
+.I tls
+This is used to select the distinguished name (DN) of a user that succeeded
+STARTTLS. Using such a clause automatically disable global STARTTLS and
+SMTP AUTH whitelisting, like if the 
+.I noauth
+keyword would have been used.
+.TP
+.I spf
+This is used to test SPF status. Possible values are 
+.I pass\fR,
+.I softfail\fR,
+.I fail\fR,
+.I neutral\fR,
+.I unknown\fR,
+.I error\fR,
+.I none\fR,
+and
+.I self\fR.
+The first seven values are plain SPF validation status. The 
+.I self
+value is a special test that checks the server's local IP address against the
+sender's SPF record. If that test validates, odds are good that the sender
+SPF record is wide open, and this is hint that SPF should not be trusted.
+.IP
+In order to use
+.I spf self\fR,
+Postfix users must specify the local address in the configuration file, 
+using the
+.I localaddr 
+option.
+.IP 
+Absence of any value after the 
+.I spf
+keyword is a synonym for 
+.I spf pass\fR. 
+This is present for backward compatibility.
+.IP
+The
+.I spf
+clause
+is only available if SPF support was compiled in. Using it will disable
+global SPF whitelisting, like if the
+.I nospf
+keyword would have been used.
+.TP
+.I ldapcheck
+This is used to query an LDAP directory.
+See the section on that topic for more information.
+.TP
+.I urlcheck
+This is used to query an external configuration source through an URL.
+See the section on that topic for more information.
+.TP
+.I dnsrbl
+This is used to select a DNSRBL. See the section on that topic for
+more information.
+.TP
+.I nsupdate
+This always-matching clause performs a DNS update, see the section
+on that topic for more information.
+.PP
+The
+.I domain\fR,
+.I from\fR,
+and
+.I rcpt
+clauses may be used with regular expressions. The regular expressions must be
+enclosed by slashes (/). No escaping is available to provide a slash
+inside a regular expression, so just do not use it. Regular expressions
+follow the format described in 
+.B re_format(7)\fR.
+Here is an example:
+.PP
+  racl greylist rcpt /@example\\.net$/
+.PP
+When regular expressions are not used,
+.I from\fR,
+and
+.I rcpt
+perform a case insensitive substring match with leading and trailing
+brackets, spaces and tabs stripped out. 
+.I domain
+performs a case insensitive suffix match.  This means, for example, 
+that gle.com will match google.com. If you want domain names to match 
+on subdomain boundaries (e.g.  gle.com will match mail.gle.com and 
+gle.com but not google.com) then enable 
+.I domainexact
+.PP
+An ACL entry can also hold various optional parameter used on match: 
+.I delay\fR,
+.I autowhite\fR,
+.I flushaddr\fR,
+.I nolog\fR,
+.I code\fR,
+.I ecode\fR,
+.I report\fR,
+.I maxpeek\fR,
+.I addheader\fR,
+.I addfooter\fR,
+and
+.I msg\fR
+.TP
+.I delay
+Specify the greylisting delay used before the message can be accepted.
+This overrides the 
+.I greylist
+global setting, and it only  makes sense on an 
+.I racl greylist
+entry. 
+.TP
+.I autowhite
+Specify the autowhitelisting duration for messages matching this ACL.
+This overrides the
+.I autowhite
+global setting, and it only makes sense on an
+.I racl greylist
+entry. Example:
+.IP
+  racl greylist rcpt JDoe@example.net delay 15m autowhite 3d
+  racl greylist rcpt root@example.net delay 1h autowhite 3d
+.TP
+.I flushaddr
+If a message matches the rule, any entry in the greylist or autowhite
+databases matching the sender IP is removed. Used with a DNSRBL blacklist
+ACL, it is useful for freeing the database from entries set up by a 
+machine which is known to be a spammer. Example:
+.IP
+  racl blacklist dnsrbl "known-spammer" flushaddr
+.TP
+.I nolog
+Do not generate syslog message if this rule matches. Example:
+.IP
+  racl whitelist default nolog
+.TP
+.I code
+.TP
+.I ecode
+.TP
+.I msg
+These 3 values can be used to choose the SMTP code, extended code and
+reply message for temporary failures and rejects. Example:
+.IP
+  racl blacklist dnsrbl "spamstomp" msg "IP caught by spamstomp"
+  racl greylist default code "451" ecode "4.7.1"
+.IP
+The 
+.I msg
+strings accepts format string substitution as documented in the 
+.B FORMAT STRINGS 
+section. For instance,
+.I %A
+gets substituted by the ACL line number.
+.IP
+None of the last 3 values makes sense for a whitelist entry. 
+.TP
+.I report
+This value overrides the text displayed in the
+.I X-Greylist 
+header, for messages that 
+.B milter-greylist(8)
+lets pass through, either because they are whitelisted, or because they
+passed greylisting (see 
+.B REPORTING\fR).
+This string can be substituted as documented in the
+.B FORMAT STRINGS
+section.
+.TP
+.I maxpeek
+This parameter only makes sense in a RCPT-stage ACL. It overrides the
+global
+.I maxpeek 
+setting for DATA-stage handling of the message. It has no effect if
+global
+.I maxpeek
+is set to 0.
+.TP
+.I addheader
+This quoted string is a RFC822 header that gets added to the message. 
+Format string substitution is supported. No check is done for header
+length standard compliance, so make sure the substituted string is
+shorter than 2048 characters. Headers are appended to the bottom,
+unless an optionnal comma-separated positive index is specified after
+the quoted string; in this case the header will be inserted at this
+index point from the top. Here is an example:
+.nf
+racl continue addheader "X-Personnal-Header: Hello world!",1 
+.fi
+.TP
+.I addfooter
+Append a footer to the message. Usual escape sequences such as \\n can
+be used to get special characters. The string is subject to format
+string expantion as described in the
+.B FORMAT STRINGS
+section. The footer will not be append if 
+.I milter-greylist
+was not able to capture the whole message, therefore 
+.I maxpeek 
+must be set approriately.
+.PP
+Entries in the access-list are evaluated sequentially, so order is
+very important. The first matching entry is used to decide if 
+a message will be whitelisted or greylisted. A special
+.I default
+clause can be used in the last ACL entry as a wildcard. 
+Here are a few complete ACL examples:
+.PP
+Example 1:
+.nf
+
+racl whitelist from friend@toto.com rcpt grandma@example.com
+racl whitelist from other.friend@example.net rcpt grandma@example.com
+racl greylist rcpt grandma@example.com
+racl whitelist default
+.fi
+.PP
+Example 2:
+.nf
+
+racl whitelist addr 193.54.0.0/16 domain friendly.com
+racl greylist rcpt user1@atmine.com
+racl greylist rcpt user2@atmine.com
+racl greylist rcpt user3@atmine.com
+racl whitelist default
+.fi
+.PP
+Example 3:
+.nf
+
+racl whitelist rcpt /@.*otherdomain\\.org$/
+racl whitelist addr 192.168.42.0/24 rcpt user1@mydomain.org
+racl whitelist from friend@example.net rcpt /@.*mydomain\\.org$/
+racl whitelist rcpt user2@mydomain.org
+racl greylist rcpt /@.*mydomain\\.org$/
+racl whitelist default
+.fi
+.SH DATA-STAGE ACL
+ACL using the
+.I racl
+keyword are evaluated at the RCPT stage of the SMTP transaction. It is 
+also possible to have ACL evaluated at the DATA stage of the SMTP transaction,
+using the 
+.I dacl 
+keyword, provided the message went through RCPT-stage ACL, and possibly
+greylisting. Note that you cannot use the
+.I greylist
+action at DATA-stage if the RCPT-stage ACL that matched had a 
+.I greylist
+action itself. The following
+clauses can be used to work on message content:
+.TP
+.I dkim
+DKIM status (if build with DKIM support). Possible values are 
+.I pass\fR,
+.I fail\fR,
+.I unknown\fR,
+.I error\fR,
+and
+.I none\fR,
+.TP
+.I header
+String or regular expression searched in message headers
+.TP
+.I body
+String or regular expression searched in message body
+.TP
+.I msgsize
+Operator followed by a message size (k or M suffix allowed for kilobytes
+or megabytes). Example:
+.IP
+  dacl blacklist msgsize >= 4M msg "No more than 4 MB please"
+.TP
+.I spamd
+SpamAssassin score (if build with SpamAssassin support). If used without
+comparison operator
+.I spamd
+is true if the score is above threshold. The
+.I spamdsock
+keyword can be used to specify the location of the spamd socket.
+.IP
+Example 1:
+.nf
+
+  spamdsock unix "/var/spamassassin/spamd.sock"
+  racl whitelist default 
+  dacl greylist spamd
+.fi
+.IP
+Example 2:
+.nf
+
+  spamdsock inet "127.0.0.1:783"
+  racl whitelist default 
+  dacl blacklist spamd > 15 msg "Your message is considered spam."
+  dacl greylist  spamd > 10 delay 2h
+  dacl greylist  spamd > 5  delay 1h
+.fi
+.PP
+Note that if there are multiple recipient, a
+.I rcpt
+clause at DATA stage evaluates to true if it matches any of them.
+If you want to match an exact set of recipients, you can use multiple 
+.I rcpt
+clauses along with a
+.I rcptcount
+clause.
+.PP
+.SH LISTS
+It is often useful to group several users or sender IP addresses in a single
+ACL. This can be done with lists. Lists must be first defined and given 
+a name before they can be used in ACL entries. Here is an example:
+.IP
+  list "my users" rcpt { user1@example.com user2@example.com }
+  list "local" addr { 192.0.2.0/24 10.0.0.0/8 }
+
+  racl whitelist list "local"
+  racl greylist list "my users"
+  racl whitelist default
+
+.SH BACKWARD COMPATIBILITY
+Previous versions of 
+.B milter-greylist(8)
+used 
+.I addr\fR,
+.I domain\fR,
+.I from\fR,
+and
+.I rcpt
+lines, without the
+.I racl
+keyword.
+Access-list management is intended to replace them.
+These lines are still accepted by
+.B milter-greylist(8)\fR,
+but they are deprecated.
+.B milter-greylist(8)
+handles them as access-list entries with a single clause. They are added 
+at the head of the access-list so the use of these keywords and 
+access-lists may lead to unspecified behaviour. Do not mix them.
+.PP
+test mode (using
+.B -T\fR)
+is also deprecated. Access-list semantics do not depend on this flag.
+.PP 
+.B milter-greylist(8)
+also used to only have a RCPT-stage ACL, which was configured through
+.I acl
+statements. These have been replaced by
+.I racl
+statements (as opposed to
+.I dacl
+statements for DATA-stage ACL). 
+.I acl
+statements are still accepted for backward compatibility and are a 
+synonym for
+.I racl
+statements.
+.SH MX SYNC
+Synchronization of the greylist among multiple MX is configured using the 
+.I peer 
+keyword. List each other MX IP addresses using the 
+.I peer 
+keyword. Here is
+an example:
+.PP
+  peer 192.0.2.18
+  peer 192.0.2.17
+  peer 192.0.2.22 timeout 7
+  peer 192.0.2.38 timeout 5m
+.PP
+You can list the local machine in the peer statements, it will be ignored.
+.PP
+The
+.I timeout
+clause sets a peer communication timeout to have proper retrial
+in case of slow MX peer. The default value is 3 seconds. The special value of
+0 disables the connection retrials.
+.PP
+By default, milter-greylist will listen on all interfaces using TCP port
+5252 or the port number given by service named mxglsync if defined in 
+.I /etc/services
+or other directory service. This behaviour can be changed by using the
+.I syncaddr
+keyword. Here are a few examples:
+.PP
+  syncaddr *
+  syncaddr * port 7689
+  syncaddr 192.0.2.2 port 9785
+  syncaddr 2001:db8::1:c3b5:123
+  syncaddr 2001:db8::1:c3b5:123 port 1234
+.PP
+Using '*' as the address means to bind to all local interfaces' addresses.
+Note that if you are not using the default port, all MXs must use the same 
+port number. 
+.PP
+For outbound connections the system is selecting one of the possible addresses.
+If you want to use a specific IP you can use:
+.PP
+  syncsrcaddr 123.456.78.9
+.PP
+.SH TEXT DUMP
+.B milter-greylist(8)
+uses a text dump of its database to resume operation after a crash. The dump
+is performed at regular time interval, but as it is a heavy operation,
+you might want to configure a particular time interval, using the
+.I dumpfreq
+option. 
+.PP
+If the
+.I dumpfreq
+value is too small, it will kill performance. If it is too high,
+you will loose a bigger part of the database on a crash. 
+.PP
+Set 
+.I dumpfreq
+to 0 to get a dump on each change (kills performance),
+Set it to -1 to never dump to a file (unsafe as you lose the whole 
+greylist on each crash), or give a time value for the delay between dumps.
+The time is given in seconds, except if a unit is given: m for minutes,
+h for hours, and d for days.
+.PP
+You may further improve the performance of the dump operation at the expense
+of humanly readable timestamp which by default appears as a comment at 
+the end of each line in the dumpfile. You may disable generation of
+this comment by specifying
+.I dump_no_time_translation
+option in the configuration file. This is specifically recommended if
+your dumpfile grows to 100's of megabytes - it can reduce the time
+needed for the dump operation by the order of magnitude!
+.SH REPORTING
+By default,
+.B milter-greylist(8)
+will add a 
+.I X-Greylist
+header to any message it handles. The header shows what happened to the
+message: delayed or not delayed, and why. The following options can be
+used in
+.B greylist.conf
+to alter this behavior:
+.TP
+.I report none
+Never add a 
+.I X-Greylist
+header.
+.TP
+.I report delays
+Only add a header if the message was delayed.
+.TP
+.I report nodelays
+Add a header if the message was not delayed. The header explains why 
+the message was not delayed.
+.TP
+.I report all
+Always add a header. This is the default.
+.SH SENDER CALLBACK SYSTEMS
+Sender callback systems are another anti-spam measure that attempts to
+send a DSN to the sender address before accepting a message. If that
+fails, then the sender address is wrong and the message is rejected. 
+Such systems usually stop their callback check at the RCPT stage of 
+the SMTP transaction. 
+.PP
+Greylisting temporarily rejects at the RCPT stage, so sender callback
+and greylisting love to fight each other.
+.B milter-greylist(8)
+proposes a workaround to that problem with the 
+.I delayedreject
+option. For messages coming from <> (that is, for DSN), it will cause 
+the temporary reject to happen at the DATA stage of the SMTP transaction 
+instead of the RCPT stage. That way,
+.B milter-greylist(8)
+will cope much better with sender callback systems. 
+.PP
+This has a minor drawback (and this is why it is not enabled by default): 
+for a multi recipient DSN, whitelisted recipient will not be honoured: 
+the message will be delayed for everyone. 
+.SH SENDMAIL MACROS
+Any sendmail macro can be used as a clause in the access list. You need to 
+define a (macro, value) pair using the 
+.I sm_macro
+keyword before using it.  Here is an example that uses the 
+.I {client_resolve}
+macro to apply a larger greylisting delay to hosts that have a bogus 
+reverse DNS:
+.IP
+  sm_macro "maybe_forged" "{client_resolve}" "FORGED"
+
+  racl greylist sm_macro "maybe_forged" delay 1h
+  racl greylist default delay 15m
+.PP
+A regular expression can be used as the macro value. 
+It must be surrounded with slashes and not by quotes.
+The special value 
+.I unset
+can also be used to match an unset macro:
+.IP
+  sm_macro "not_foo" "{foo}" unset
+.PP
+Note that any Sendmail macro that is not exported using the
+.I Milter.macros.envrcpt 
+setting of 
+.I sendmail.cf
+will be seen as unset from milter-greylist.
+.SH DNSRBL
+DNS Reverse Black List can be used to toggle an ACL. They must be defined
+and named before they can be used. Here is an example which uses 
+a bigger greylisting delay for hosts caught in the SORBS dynamic pool 
+DNRSBL (this will include DSL and cable customers pools, which are well 
+known to be massively infected by spamwares):
+.IP
+  dnsrbl "SORBS DUN" dnsbl.sorbs.net 127.0.0.10/32
+
+  racl greylist dnsrbl "SORBS DUN" delay 1h
+  racl greylist default delay 15m
+.PP
+The definition of a DNSRBL starts by the
+.I dnsrbl
+keyword, followed by the quoted name of the DNSRBL, the DNS domain on 
+which addresses should be looked up, and the answer we should consider
+as a positive hit.
+.PP
+DNSRBL support is only available if enabled through the --enable-dnsrbl
+config flag. Please make sure
+.B milter-greylist(8)
+is linked against a thread-safe DNS resolver, otherwise it shall crash.
+.SH DNS updates
+ACL are able to trigger a DNS update, which can be used to feed a DNSRBL. 
+That functionnality is enabled at build time if the DNS resolver has DNS 
+update support.
+.PP
+Configuration is done with the
+.I nsupdate
+statement, which may be used several times, and the optionnal
+.I tsig
+statement, if you want ot use authenticated DNS update. Here is an example
+syntax:
+.IP
+  tsig "dns-update" "hmac-md5" "1B2M2Y8AsgTpgAmY7PhCfg=="
+  nsupdate "bl.example.net" { rname "%j.bl.example.net" rvalue "127.0.0.2" tsig "dns-update" }
+.PP
+The options for 
+.I nsupdate
+are:
+.TP
+.I rname
+Created record name, which uses format strings.
+.TP
+.I rvalue
+Created record value, which uses format strings.
+.TP
+.I servers
+Quoted comma-separated list of DNS server the update should be sent to.
+Default is to use the system confifugration, usualy from
+.I /etc/resolv.conf
+.TP
+.I ttl
+TTL of created DNS record. Default is 0 seconds.
+.TP
+.I class
+Created record class, as numeric value. Default is 1, for IN class.
+.TP
+.I type
+Created record type, as numeric value. Default is 1, for A type.
+.TP
+.I tsig
+The name of a
+.I tsig
+configuration, which must have been supplied before. If unspecified,
+unauthenticated DNS updates are performed.
+.PP
+Once configured, DNS updates can be used in any ACL:
+.IP
+  racl blacklist rcpt spamtrap@example.net nsupdate "bl.example.net"
+.PP
+.SH PROPERTIES
+Properties are variables that can be set, evaluated and printed in ACL. 
+A property may be dropped once the current recipient is processed, or it
+can be retained until the message is processed. They can be created through
+the following always-matching ACL clauses:
+.TP
+.I set\~\[char36]name="value"
+This sets a property that will be retained for all next recipients. Right
+hand side of the clause may be a quoted string (which will be substituted 
+using format strings, as described in the
+.B FORMAT STRINGS
+section), a number, or another property name (which will be substituted 
+by the property value).
+.TP
+.I rset\~\[char36]name="value"
+Same as 
+.I set
+clause, except that the property will be droped once the current user will
+have been processed.
+.TP
+.I urlcheck
+These clause will cause properties to be fetched from an external web service.
+See the
+.B URL checks
+section below for details.
+.TP
+.I ldapcheck
+These clause will cause properties to be fetched from a LDAP directory
+See the
+.B LDAP CHECKS
+section below for details.
+.PP
+Properties can be used as left-hand side part of ACL clauses:
+.IP
+  racl blacklist $name "badvalue"
+  racl blacklist $name /badregex/
+.PP
+If used left-hand side and prefixed by a star, the property
+will be evaluated as a 
+.B glob(7)
+pattern, In the example below, if sender DNS domain is
+.I test.example.net
+and 
+.I $domain
+is 
+.I *.example.net\fR,
+we get a match.
+.IP
+  racl blacklist *$domain "%f"
+.PP
+They are also available as right-hand side of many ACL clauses:
+.IP
+  racl continue set $badword="spam"
+  racl blacklist body $badword
+.PP
+Values of properties can be obtained in any quoted string that is 
+subject to format string expantion:
+.IP
+  racl continue set $webmaster="webmaster@example.net"
+  racl blacklist domain evil.net msg "blacklisted, ask $P{webmaster} why"
+.PP
+When the property value is a number, it can be increased or decreased using
+this syntax:
+.IP
+  racl continue set $score+=5
+  racl continue set $score-=5
+.PP
+Here again, right hand side may be a quoted string, a number or another 
+property. For the quoted string and property cases, a conversion is first
+made to an integer, using 0 as a value on failure. Note that no arithmetic
+evaluation occurs. For instance, the quoted string
+.I \[char34]1 + 1\[char34]
+will be evaluated as 0. 
+.PP
+The
+.B log
+ACL clause can be helpful when one need to figure what happens to 
+property values during the ACL flow. See the 
+.B CUSTOM REPORT
+section for more details.
+.SH URL checks
+.B milter-greylist(8) 
+is able to query external sources of information 
+through various URL, if it was built with --with-libcurl. Here is an 
+example:
+.IP
+  urlcheck "glusr" "http://www.example.net/mgl-config?rcpt=%r" 5
+
+  racl greylist urlcheck "glusr" delay 15m 
+  racl whitelist default
+.PP
+The trailing 5 at the end of the
+.I urlcheck
+definition is the maximum number of simultaneous connections we want to 
+launch on this URL. For each message, the URL will be queried, with  % format 
+tags being substituted. For instance,
+.I %r
+is substituted by the recipient. See the 
+.B FORMAT STRINGS
+section for the complete list of substitutions.
+.PP
+.B milter-greylist(8) 
+expects an answer containing a list of \\n terminated lines, with  
+.I key: value 
+pairs. The most basic answer to get a match is:
+.IP
+  milterGreylistStatus: Ok
+.PP
+.I TRUE 
+can be used as an alias for
+.I Ok
+here. 
+.PP
+The answer can be more complex, with keys that will overload the ACL
+settings:
+.TP
+.I milterGreylistDelay 
+The greylisting delay to use (time unit suffix allowed).
+.TP
+.I milterGreylistAutowhite
+The autowhite delay to use (time unit suffix allowed).
+.TP
+.I milterGreylistFlushAddr
+The value is ignored. If this key is present, then the IP address for
+the sender machine will be flushed from greylist and autowhite databases.
+.TP
+.I milterGreylistCode
+The SMTP code to return (e.g.: 551).
+.TP
+.I milterGreylistECode
+The SMTP extended code to return (e.g.: 5.7.1)
+.TP
+.I milterGreylistMsg
+The string to return with SMTP codes.
+.TP
+.I milterGreylistReport
+The string to display in the
+.I X-Greylist 
+header.
+.TP
+.I milterGreylistIgnore
+This line will be ignored, without warnings in the logs.
+.TP
+.I milterGreylistAction
+This feature is nifty but use it with caution, as it makes the access
+list a bit difficult to understand. By specifying the values
+.I greylist\fR,
+.I whitelist\fR,
+or
+.I blacklist\fR,
+it is possible to overload the ACL action itself.
+.PP
+The ACL will match if any of the above key is returned: 
+.I milterGreylistStatus
+is not mandatory.
+.PP
+Optional keywords can be appended to a 
+.I urlcheck
+definition:
+.TP
+.I postmsg
+On DATA-stage ACL, This causes the message to be sent
+(up to
+.I maxpeek
+bytes) in a POST request. Here is an example:
+.IP
+  urlcheck "extfilter" "http://www.example.net/f.cgi" 5 postmsg
+
+  dacl blacklist urlcheck "extfilter"
+  dacl whitelist default
+.PP
+.TP
+.I getprop
+Gather the properties returned by the URL and reuse them in the ACL.
+The gathered properties can be accessed in the current and following ACL 
+by prefixing them by a dollar ($).
+.TP
+.I clear
+This causes gathered properties to be cleared on each new recipient. 
+This avoids properties for several recipients to mix.
+.TP
+.I fork
+Tells
+.B milter-greylist(8)
+to fork a separate instance of itself for performing the queries. Use it if 
+you encounter thread-safety problems. 
+.I fork
+is not compatible with
+.I postmsg\fR.
+.TP
+.I domatch
+Cause the ldapcheck clause to be evaluated in ACL. Default behavior is
+to ignore the result and just fecth properties, except if the LDAP 
+directory is unreachecable, in which case a temporary failure occurs.
+The 
+.I fixldapcheck
+gloabal settings may also be used to globaly cause all
+.I ldapcheck
+and
+.I urlcheck
+clauses to match.
+.PP
+Here is an example that will use various DNSRBL depending on a per-recipient
+setting stored in the 
+.I dnsrbl
+attribute of a LDAP directory.
+.IP
+  dnsrbl "RBL2" "rbl.example.net" "127.0.0.2"
+  dnsrbl "RBL3" "rbl.example.net" "127.0.0.3"
+  dnsrbl "RBL4" "rbl.example.net" "127.0.0.4"
+  urlcheck "userconf" "ldap://localhost/dc=example,dc=net?milterGreylistStatus,dnsrbl?one?mail=%r" 5 getprop clear
+
+  racl blacklist urlcheck "userconf" $dnsrbl "RBL2" dnsrbl "RBL2"
+  racl blacklist $dnsrbl "RBL3" dnsrbl "RBL3"
+  racl blacklist $dnsrbl "RBL4" dnsrbl "RBL4"
+.PP
+Note that when matching gathered properties, format strings and regex can
+be used.
+.PP
+.SH LDAP CHECKS
+If milter-greylist was built with --with-openldap, then you can also use 
+.I ldapcheck
+for pulling information from an LDAP directory. This works exactly like
+.I urlcheck\fR,
+except that properties are always collected: The
+.I getprop
+option is implicit.
+.PP
+A list of LDAP URL to use can be specified with the
+.I ldapconf 
+keyword. The network timeout is optional.
+.IP
+  ldapconf "ldap://localhost ldaps://ldap.example.net" timeout 2s
+.PP
+When
+.I ldaps://
+is used, the system's 
+.I ldap.conf
+file is used to locate x509 certificates.
+.PP
+When defining LDAP queries with the
+.I ldapcheck
+statement, note that the scheme and host part of the URL are ignored.
+Servers listed in
+.I ldapconf
+are used instead.
+.PP
+.SH RATE LIMIT
+The 
+.I ratelimit
+keyword specifies a ratelimit configuration to be used in access lists. It
+must be followed by the rate limit configuration name, what is being 
+accounted (i.e.:
+.I session
+for SMTP sessions, 
+.I rcpt
+for recipients,
+.I data
+for bytes in body and headers), the actual limit, and the sampling 
+period. Example:
+.IP
+  ratelimit "internalclients" rcpt 10 / 1m
+
+  racl blacklist addr 192.0.2.0/24 ratelimit "internalclients" \\
+	msg "you speak too much"
+.PP
+The 
+.I ratelimit 
+keyword can also have an option 
+.I key 
+statement, which determine the set of key for message accounting. The
+default is
+.I %i
+for per IP address accounting (see the
+.B FORMAT STRINGS
+sections for the possible syntax of this field). Here is an example
+that configures a rate limit of 100 messages per hour
+for each individual recipient-IP set.
+.IP
+  ratelimit "internalclients" rcpt 100 / 1h key "%r%i"
+
+  racl blacklist addr 192.0.2.0/24 ratelimit "internalclients" \\
+	msg "you speak too much"
+.PP
+.SH CUSTOM REPORTS
+The 
+.I stat
+keyword can be used to specify a custom report for milter-greylist activity.
+It should be supplied with an output (either file or external command) and
+a format string. Here is an example:
+.IP
+  stat ">>/var/log/milter-greylist.log" "%T{%T},%i,%f,%r,%A\\n"
+.PP
+If the output starts by 
+.I >>
+or
+.I >
+then it is a file. Use
+.I >> 
+to append to an existing file, and use
+.I > 
+to overwrite it. If the output starts by a 
+.I |
+then the output is a shell command, like in the example below:
+.IP
+  stat "|logger -p local7.info" "%T{%T},%i,%f,%r,%A\\n"
+.PP
+The format string gets substituted as URL checks format string: %r gets
+substituted by the recipient, %f by the sender, and so on. See the 
+.B FORMAT STRINGS
+section for a complete list of available substitutions.
+.PP
+There is also an always-matching 
+.I log
+ACL clause that can be used to send a formated string to syslog with
+.I LOG_INFO
+level.  Here is an example:
+.IP
+racl continue rcpt /@example\\.com$/ log "I was here"
+.PP
+.SH COMMAND-LINE FLAG EQUIVALENTS
+Most 
+.B milter-greylist(8)
+command-line options have equivalent options that can be set in the 
+configuration file. Note that if a command line option is supplied,
+it will always override the configuration file.
+.PP
+If a command-line equivalent keyword is used more than once, the last 
+keyword will override the previous ones.
+.TP
+.I verbose
+Enable debug output. This is equivalent to the
+.B -v
+flag.
+.TP
+.I quiet
+Do not tell clients how much time remains before their e-mail will
+be accepted. This is equivalent to the
+.B -q
+flag.
+.TP
+.I nodetach
+Do not fork and go into the background. This is equivalent to the
+.B -D
+flag.
+.TP
+.I noauth
+Greylist clients regardless if they succeeded SMTP AUTH or STARTTLS. 
+Equivalent to the
+.B -A
+flag.
+.TP
+.I noaccessdb
+Normally 
+.B milter-greylist(8)
+will whitelist a message if 
+.B sendmail(8)
+defines a ${greylist} macro set to WHITE. This enables complex whitelisting
+rules based on the Sendmail access DB. This option inhibits this behavior.
+.TP
+.I nospf
+Greylist clients regardless if they are SPF-compliant. Equivalent to the
+.B -S
+flag.
+.TP
+.I testmode
+Enable test mode. Equivalent to the
+.B -T
+flag. This option is deprecated.
+.TP
+.I greylist
+The argument sets how much time 
+.B milter-greylist(8)
+will want the client to wait between the first attempt and the time
+the message is accepted. The time is given in seconds, except if a 
+unit is given: m for minutes, h for hours, and d for days. 
+The 
+.I greylist 
+keyword is equivalent to the
+.B -w 
+option. Here is an example that sets the delay to 45 minutes:
+.IP
+  greylist 45m
+.TP
+.I autowhite
+This sets the auto-whitelisting duration, equivalent to the
+.B -a
+command-line option. As for the 
+.I greylist
+keyword,
+units can be
+supplied. Here is an example for a 3 day long auto-whitelisting:
+.IP
+  autowhite 3d
+.TP
+.I pidfile
+This causes
+.B milter-greylist(8)
+to write its PID into the file given as argument, like the 
+.B -P
+command line argument does. The path to the file
+must be absolute and it must be enclosed in quotes. Here is an example:
+.IP
+  pidfile "/var/run/greylist.pid"
+.TP
+.I dumpfile
+This chooses the location of the greylist dump file, like the
+.B -d
+command line option does. The path must be absolute and enclosed in quotes.
+It can optionally be followed by an octal permission mode.
+Example:
+.IP
+  dumpfile "/var/milter-greylist/greylist.db" 640
+.TP
+.I subnetmatch
+This is equivalent to the 
+.B -L 
+command line option. It takes a slash followed by a CIDR mask as argument,
+and it commands the subnet matching feature. Example, for a class C wide
+matching:
+.IP
+  subnetmatch /24
+.TP
+.I subnetmatch6
+This is equivalent to the
+.B -M
+command line option. It takes a slash followed by a prefixlen as argument,
+and it commands the subnet matching feature. Example, for a subnet wide
+matching:
+.IP
+  subnetmatch6 /64
+.TP
+.I socket
+Like the 
+.B -p
+command line option, this keyword is used to specify the socket used
+to communicate with
+.B sendmail(8)\fR.
+It must be enclosed in quotes and can optionally be followed by an octal
+permission mode
+(valid values are 666, 660 or 600, other values cause an error):
+.IP
+  socket "/var/milter-greylist/milter-greylist.sock" 660
+.TP
+.I user
+This keyword should be followed by a quoted user login and optionally a 
+colon followed by a groupname.
+Like the 
+.B -u
+option, this is used to run
+.B milter-greylist(8)
+as a non root user.  Here is an example:
+.IP
+  user "smmsp"
+.SH MISCELLANEOUS
+These options have no command line equivalent:
+.TP
+.I logfac
+Sets the syslog facility for messages.  Can be set to any of the standard
+facilities:
+.I kern\fR,
+.I user\fR,
+.I mail\fR,
+.I daemon\fR,
+.I auth\fR,
+.I syslog\fR,
+.I lpr\fR,
+.I news\fR,
+.I uucp\fR,
+.I cron\fR,
+.I authpriv\fR,
+.I ftp\fR,
+.I local0\fR,
+.I local1\fR,
+.I local2\fR,
+.I local3\fR,
+.I local4\fR,
+.I local5\fR,
+.I local6\fR,
+.I local7\fR.
+Can also be set to
+.I none
+to disable syslog output completely.
+.TP
+.I timeout
+is used to control how long greylist tuples are retained in the database. 
+Value is in seconds, except if a suffix is given (m for minutes, h for hours,
+d for days). Default is 5 days.
+.TP
+.I extendedregex
+Use extended regular expressions instead of basic regular expressions.
+.TP
+.I unbracket
+Attempt to resolve sender address when the MTA handed it as bracketed IP
+address (e.g.: 
+.I [192.0.2.18]\fR
+). Default is to leave it as is.
+.TP
+.I maxpeek
+Limit (in bytes) how much of messages are examined for header and body
+searches.
+.TP
+.I lazyaw
+Make auto-whitelist look at just the IP instead of the (sender IP,
+sender e-mail address, recipient e-mail address) tuple.
+.TP
+.I domainexact
+match on subdomain boundaries instead of the default suffix matching.
+E.g. if
+.I domainexact
+is not enabled (the default) then gle.com will match google.com in 
+addition to gle.com. If 
+.I domainexact
+is enabled then, domain names will match on subdomain boundaries (e.g.  gle.com will
+match mail.gle.com and gle.com but not google.com)
+.TP
+.I drac db
+Tell where the DRAC DB file is. This is only available if DRAC support
+was compiled in. Here is an example:
+.IP
+  drac db "/usr/local/etc/drac.db"
+.TP
+.I nodrac
+Disable DRAC.
+.TP
+.I logexpired
+This option causes greylist entries that expire to be logged via syslog.
+This allows you to easily collect the IP addresses and sender names and
+use them for blacklisting, SPAM scoring, etc.  Normally, expiration's are
+only logged if the
+.B debug
+option is set, but that generates a lot of extra messages.
+.TP
+.I localaddr
+This keyword can be used to manually define the local MTA's IP address
+for such uses as
+.I spf self
+and
+.I p0f
+in absence of the milter-API
+.I {if_addr}
+macro support in your MTA (Postfix, Sun/Oracle CommSuite Messaging Server).
+This is not so useful when using Sendmail, since it serves the macro and
+the local address can be detected automatically.
+.PP
+The configuration file is reloaded automatically once it is modified when
+new e-mail arrives. Most configuration keywords will take effect
+immediately, except the following, which will only take effect after 
+a restart of 
+.B milter-greylist(8)\fR: 
+.I nodetach\fR,
+.I pidfile\fR,
+.I socket\fR,
+and 
+.I user\fR.
+.PP
+The 
+.I dumpfreq
+option can be changed dynamically, but the change will only take effect 
+after the next dump.
+.TP
+.I multiracl
+By default, once a RCPT-stage ACL whitelists a recipient, next 
+recipient gets automatically whitelisted. This historical behavior 
+can be considered a bug, and this option disables it.
+.SH FORMAT STRINGS
+Various statements in the configuration file accept format strings, where
+the following % prefixed tokens are substituted. Here is the complete list
+of available substitutions (Note that some substitutions are not relevant
+in any context).
+.TP
+.I %r 
+the message recipient e-mail address. This is not substituted for DATA
+stage ACL since there can be multiple recipients for the message.
+.TP
+.I %f
+the message sender e-mail address
+.TP
+.I %i
+the sender machine IP address
+.TP
+.I %j
+the reversed sender machine IP address. For instance, 192.0.2.12 becomes 12.2.0.192.
+.TP
+.I %I
+the sender machine IP address masked by a CIDR. Example: 
+.I %I{/24}
+.TP
+.I %d
+the sender machine DNS address
+.TP
+.I %h
+the SMTP transaction HELO string
+.TP
+.I %mr
+the mailbox part of %r (before the @ sign). This is not substituted for DATA
+stage ACL since there can be multiple recipients for the message.
+.TP
+.I %sr
+the site part of %r (after the @ sign). This is not substituted for DATA
+stage ACL since there can be multiple recipients for the message.
+.TP
+.I %mf
+the mailbox part of %f (before the @ sign)
+.TP
+.I %sf
+the site part of %f (after the @ sign)
+.TP
+.I %md
+the machine part of %d (before the first . sign)
+.TP
+.I %sd
+the site part of %d (after the first . sign)
+.TP
+.I %Xc
+the SMTP code returned
+.TP
+.I %Xe
+the SMTP extended code returned
+.TP
+.I %Xm
+the SMTP message returned
+.TP
+.I %Xh
+the message displayed in the X-Greylist header
+.TP
+.I %D
+Comma-separated list of DNSRBL for which the sender host matched
+.TP
+.I %M
+a sendmail macro value. Examples: 
+.I %Mj
+or
+.I %M{if_addr}
+.TP
+.I %g
+a regex back reference. For instance,
+.I %g{\\\\2}
+is substituted by the string matching the second parenthesis group in all 
+ACL regex clauses
+.TP
+.I %T
+a brace-enclosed
+.B strftime(3) 
+format string that will be substituted by the system time. Example:
+.I %T{%Y%m%d:%H%M%S}
+.TP
+.I %v
+milter-greylist's version
+.TP
+.I %G
+Offset to GMT (e.g.: -0100)
+.TP
+.I %C
+Sender IP country code, as reported by GeoIP. This is only available if
+.B milter-greylist
+was built with GeoIP support
+.TP
+.I %Fx
+p0f OS fingerprint genre and detail. This is only available if
+.B milter-greylist
+was built with p0f support.
+.TP
+.I %V
+Shortcut to "milter-greylist-%v (%Mj [%M{if_addr}]); %T{%a, %d %b %Y %T} %G (%T{%Z})"
+.TP
+.I %S 
+the action performed:
+.I accept\fR,
+.I tempfail\fR,
+or
+.I reject\fR.
+.TP
+.I %A
+the line number of the ACL that caused the action.
+.TP
+.I %a
+the id string of the ACL that caused the action. If no id was given, the line
+number is used instead.
+.TP
+.I %cA
+the line number of the ACL being evaluated, whether it matches or not.
+.TP
+.I %ca
+the id string of the ACL being avaluated, whether it matches or not. 
+If no id was given, the line number is used instead.
+.TP
+.I %Et
+total elapsed time in seconds before a greylisted message has been accepted
+.TP
+.I %Eh
+hours elapsed
+.TP
+.I %Em
+minutes elapsed (modulo one hour)
+.TP
+.I %Es
+seconds elapsed (modulo one minute)
+.TP
+.I %E
+shortcut to %Eh:%Em:Es
+.TP
+.I %Rt
+total remaining time in seconds before a greylisted message will be accepted
+.TP
+.I %Rh
+hours remaining
+.TP
+.I %Rm
+minutes remaining (modulo one hour)
+.TP
+.I %Rs
+seconds remaining (modulo one minute)
+.TP
+.I %R
+shortcut to %Rh:%Rm:Rs
+.TP
+.I %Hs
+SpamAssassin score (if build with SpamAssassin support)
+.TP
+.I %pn
+Name of last LDAP or CURL gathered property that matched an ACL. 
+.TP
+.I %pv
+Value of last LDAP or CURL gathered property that matched an ACL.
+.TP
+.I %pr
+Recipient that caused storage of the last matching LDAP or CURL 
+gathered property.
+.I %P
+a LDAP or CURL gathered propery. Example:
+.I %P{mail}
+Note that this copes very badly with multivalued properties.
+.TP
+.I %Qd
+DKIM query result (pass, fail, etc.), if built with DKIM support.
+.TP
+.I %Qs
+SPF query result (pass, (soft)fail, etc.), if built with SPF support.
+.TP
+.I %QA
+Authentication results summary, suitable for Authentication-Results
+header. Will included formatted query results from DKIM and SPF if checked.
+.TP
+.I %QS
+SPF result, suitable for Received-SPF header. Available when
+compiled with libspf2.
+.TP
+.I %%
+a single % character
+.PP
+.SH AUTHORS
+Emmanuel Dreyfus <manu@netbsd.org>
+.PP
+.B milter-greylist
+received many contributions from (in alphabetical order):
+Adrian Dabrowski,
+Aida Shinra,
+Adam Katz,
+Alexander Lobodzinski,
+Alexandre Cherif,
+Alexey Popov,
+Andrew McGill,
+Attila Bruncsak,
+Benoit Branciard,
+Bernhard Schneider,
+Bob Smith,
+Constantine A. Murenin,
+Chris Bennett,
+Christian Pelissier,
+Cyril Guibourg,
+Dan Hollis,
+David Binderman,
+Denis Solovyov,
+Elrond,
+Enrico Scholz,
+Eugene Crosser,
+Fabien Tassin,
+Fredrik Pettai,
+Gary Aitken,
+Georg Horn,
+Gert Doering,
+Greg Troxel,
+Guido Kerkewitz,
+Hajimu Umemoto,
+Hideki ONO,
+Ivan F. Martinez,
+Jacques Beigbeder,
+Jean Benoit,
+Jean-Jacques Puig,
+Jeff Rife,
+Jim Klimov,
+Jobst Schmalenbach,
+Joe Pruett,
+Joel Bertrand,
+Johann E. Klasek,
+Johann Klasek,
+John Thiltges,
+John Wood,
+Jorgen Lundman,
+Kazuyuki Yoshida,
+Klas Heggemann,
+Kouhei Sutou,
+Laurence Moindrot,
+Lev Walkin,
+Manuel Badzong,
+Mart Pirita,
+Martin Paul,
+Matt Kettler,
+Mattheu Herrb,
+Matthias Scheler,
+Matthieu Herrb,
+Michael Fromme,
+Moritz Both,
+Nerijus Baliunas,
+Ole Hansen,
+Pavel Cahyna,
+Pascal Lalonde,
+Per Holm,
+Petar Bogdanovic,
+Petr Kristof,
+Piotr Wadas,
+R P Herrold,
+Ralf S. Engelschall,
+Ranko Zivojnovic,
+Remy Card,
+Rick Adams,
+Rogier Maas,
+Romain Kang,
+Rudy Eschauzier,
+Stephane Lentz,
+Steven Hiscocks,
+Thomas Scheunemann,
+Tim Mooney,
+Vincent Dufresne,
+Wolfgang Solfrank, and
+Yaroslav Boychuk.
+.PP    
+Thanks to
+Helmut Messerer 
+and    
+Thomas Pfau
+for their feedback on the first releases of this software.
+.SH SEE ALSO
+milter-greylist(8),
+sendmail(8),
+syslogd(8).
+.TP
+Evan Harris's paper:
+.I http://projects.puremagic.com/greylisting/
+.TP
+milter-greylist's web site:
+.I http://hcpnet.free.fr/milter-greylist/
