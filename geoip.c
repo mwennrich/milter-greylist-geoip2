@@ -48,8 +48,6 @@ __RCSID("$Id");
 #include <sysexits.h>
 #include <sys/param.h>
 
-#include <GeoIP.h>
-
 #include "milter-greylist.h"
 #include "conf.h"
 #include "geoip.h"
