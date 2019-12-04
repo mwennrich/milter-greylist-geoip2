@@ -121,8 +121,17 @@
  AC_ARG_WITH(libdmalloc,
  	[  --with-libdmalloc=DIR  Find libdmalloc in DIR],
 --- geoip.c.orig	2016-11-24 05:11:37.000000000 +0100
-+++ geoip.c	2019-01-15 14:41:45.149726000 +0100
-@@ -58,10 +58,11 @@ __RCSID("$Id");
++++ geoip.c	2019-12-04 18:10:16.770223000 +0100
+@@ -48,8 +48,6 @@
+ #include <sysexits.h>
+ #include <sys/param.h>
+ 
+-#include <GeoIP.h>
+-
+ #include "milter-greylist.h"
+ #include "conf.h"
+ #include "geoip.h"
+@@ -58,10 +56,11 @@
  #include <dmalloc.h> 
  #endif
  
@@ -137,7 +146,7 @@
  static pthread_rwlock_t geoip_lock;
  
  void
-@@ -83,43 +84,21 @@ geoip_set_db(name)
+@@ -83,43 +82,21 @@
  	char *name;
  {
  	if (geoip_handle != NULL) {
@@ -185,7 +194,7 @@
  int
  geoip_filter(ad, stage, ap, priv)
  	acl_data_t *ad;
-@@ -142,32 +121,8 @@ void
+@@ -142,32 +119,8 @@
  geoip_set_ccode(priv)
  	struct mlfi_priv *priv;
  {
@@ -219,7 +228,7 @@
  
  	if (iptostring(SA(&priv->priv_addr),
  	    priv->priv_addrlen, ipstr, sizeof(ipstr)) == NULL) {
-@@ -177,7 +132,19 @@ geoip_set_ccode(priv)
+@@ -177,7 +130,19 @@
  	}
  
  	WRLOCK(geoip_lock);
