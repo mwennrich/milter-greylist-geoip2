@@ -61,6 +61,7 @@ Optional dependencies:
 - libspf2, libspf_alt or libspf, for SPF support
 - libcurl, for URL checks support
 - libGeoIP, for GeoIP support
+- libmaxminddb, for GeoIP2 support
 - libbind from BIND 9, for DNSRBL support, except if your system has a 
   thread-safe DNS resolver built-in.
 

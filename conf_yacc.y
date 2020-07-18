@@ -19,6 +19,7 @@
 %token DOMATCH DATA LOCALADDR ADDFOOTER CONTINUE FIXLDAPCHECK SUBJTAG
 %token NOENCODE NOESCAPE TSIG NSUPDATE SERVERS RNAME RVALUE TTL CLASS TYPE
 %token UNBRACKET SET RSET EQSET INCSET DECSET LOG RAWFROM
+%token GEOIP2DB
 
 %{
 #include "config.h"
@@ -58,6 +59,9 @@ __RCSID("$Id: conf_yacc.y,v 1.129 2016/11/24 04:11:37 manu Exp $");
 #include "prop.h"
 #ifdef USE_GEOIP
 #include "geoip.h"
+#endif
+#ifdef USE_GEOIP2
+#include "geoip2.h"
 #endif
 #ifdef USE_P0F
 #include "p0f.h"
@@ -150,6 +154,7 @@ lines	:	lines netblock '\n'
 	|	lines user '\n'
 	|	lines geoipdb '\n'
 	|	lines geoipv6db '\n'
+	|	lines geoip2db '\n'
 	|	lines nodetach '\n'
 	|	lines lazyaw '\n'
 	|	lines report '\n'
@@ -785,6 +790,19 @@ geoipv6db:	GEOIPV6DB QSTRING	{
 #endif
 				}
 	;
+geoip2db:	GEOIP2DB QSTRING	{
+#ifdef USE_GEOIP2
+				char path[QSTRLEN + 1];
+
+				geoip2_set_db(quotepath(path, $2, QSTRLEN));
+#else
+				mg_log(LOG_INFO,
+				    "GeoIP2 support not compiled in, "
+				    "ignore line %d",
+				    conf_line);
+#endif
+				}
+	;
 report:		REPORT NONE	{ conf.c_report = C_GLNONE; }
 	|	REPORT DELAYS	{ conf.c_report = C_DELAYS; }
 	|	REPORT NODELAYS	{ conf.c_report = C_NODELAYS; }
@@ -1335,7 +1353,7 @@ spamd_score_prop_clause:	SPAMD OP PROP {
 	;
 
 geoip_clause:		GEOIP QSTRING {
-#ifdef USE_GEOIP
+#if defined(USE_GEOIP) || defined(USE_GEOIP2)
 				char ccode[IPADDRSTRLEN + 1];
 
 				acl_add_clause(AC_GEOIP, 

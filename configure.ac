@@ -459,7 +459,18 @@ AC_ARG_WITH(libGeoIP,
 	[  --with-libGeoIP=DIR  Find libGeoIP in DIR],
 	[CFLAGS=$CFLAGS" -I$withval/include -DUSE_GEOIP" 
 	    LIBS="-lGeoIP $LIBS"
+	    USE_GEOIP="true"
 	    LDFLAGS=$LDFLAGS" -L$withval/lib -Wl,$rpath$withval/lib"])
+AC_ARG_WITH(libmaxminddb,
+	[  --with-libmaxminddb=DIR  Find GeoIP2 libmaxminddb in DIR],
+	[if test -z "$USE_GEOIP"; then
+		CFLAGS=$CFLAGS" -I$withval/include -DUSE_GEOIP2"
+		LIBS="-lmaxminddb $LIBS"
+		LDFLAGS=$LDFLAGS" -L$withval/lib -Wl,$rpath$withval/lib"
+	else
+		echo "--with-libGeoIP and -with-libmaxminddb are mutually exclusive";
+		exit 1;
+	fi])
 AC_ARG_WITH(libdmalloc,
 	[  --with-libdmalloc=DIR  Find libdmalloc in DIR],
 	[CFLAGS=$CFLAGS" -I$withval/include -DUSE_DMALLOC" 

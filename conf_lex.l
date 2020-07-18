@@ -117,6 +117,7 @@ body		[Bb][Oo][Dd][Yy]
 maxpeek		[Mm][Aa][Xx][Pp][Ee][Ee][Kk]
 geoipdb		[Gg][Ee][Oo][Ii][Pp][Dd][Bb]
 geoipv6db	[Gg][Ee][Oo][Ii][Pp][Vv]6[Dd][Bb]
+geoip2db	[Gg][Ee][Oo][Ii][Pp]2[Dd][Bb]
 geoip		[Gg][Ee][Oo][Ii][Pp]
 ldapconf	[Ll][Dd][Aa][Pp][Cc][Oo][Nn][Ff]
 ldapcheck	[Ll][Dd][Aa][Pp][Cc][Hh][Ee][Cc][Kk]
@@ -313,6 +314,7 @@ type		[Tt][Yy][Pp][Ee]
 {geoipdb}	{ return GEOIPDB; }
 {geoipv6db}	{ return GEOIPV6DB; }
 {geoip}		{ return GEOIP; }
+{geoip2db}	{ return GEOIP2DB; }
 {ldapconf}	{ return LDAPCONF; }
 {ldapcheck}	{ return LDAPCHECK; }
 {fixldapcheck}	{ return FIXLDAPCHECK; }

@@ -83,6 +83,9 @@ __RCSID("$Id: acl.c,v 1.118 2016/11/24 03:59:40 manu Exp $");
 #ifdef USE_GEOIP
 #include "geoip.h"
 #endif
+#ifdef USE_GEOIP2
+#include "geoip2.h"
+#endif
 #ifdef USE_P0F
 #include "p0f.h"
 #endif
@@ -425,6 +428,16 @@ struct acl_clause_rec acl_clause_rec[] = {
 	{ AC_GEOIP_LIST, MULTIPLE_OK, AS_ANY, "geoip_list", 
 	  AT_LIST, AC_NONE, AC_NONE, EXF_GEOIP,
 	  acl_print_list, acl_add_list, 
+	  NULL, acl_list_filter },
+#endif
+#ifdef USE_GEOIP2
+	{ AC_GEOIP, MULTIPLE_OK, AS_ANY, "geoip",
+	  AT_STRING, AC_GEOIP_LIST, AC_STRING, EXF_GEOIP,
+	  acl_print_string, acl_add_string,
+	  acl_free_string, geoip2_filter },
+	{ AC_GEOIP_LIST, MULTIPLE_OK, AS_ANY, "geoip_list",
+	  AT_LIST, AC_NONE, AC_NONE, EXF_GEOIP,
+	  acl_print_list, acl_add_list,
 	  NULL, acl_list_filter },
 #endif
 #ifdef USE_P0F

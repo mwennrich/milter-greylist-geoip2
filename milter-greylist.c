@@ -107,6 +107,9 @@ static int check_drac(char *dotted_ip);
 #ifdef USE_GEOIP
 #include "geoip.h"
 #endif
+#ifdef USE_GEOIP2
+#include "geoip2.h"
+#endif
 #ifdef USE_P0F
 #include "p0f.h"
 #endif
@@ -423,6 +426,9 @@ real_connect(ctx, hostname, addr)
 
 #ifdef USE_GEOIP
 	geoip_set_ccode(priv);
+#endif
+#ifdef USE_GEOIP2
+	geoip2_set_ccode(priv);
 #endif
 #ifdef HAVE_SPF2
 	priv->priv_spf_header = NULL;
@@ -1853,6 +1859,9 @@ main(argc, argv)
 #ifdef USE_GEOIP
 	geoip_init();
 #endif
+#ifdef USE_GEOIP
+	geoip2_init();
+#endif
 	macro_init();
 	ratelimit_init();
 #ifdef USE_NSUPDATE
@@ -3244,7 +3253,7 @@ fstring_expand(priv, rcpt, fstring, cv)
 			break;
 		}
 		case 'C': {	/* Country code from GeoIP */
-#ifdef USE_GEOIP
+#if defined(USE_GEOIP) || defined(USE_GEOIP2)
 			if (priv->priv_ccode != NULL)
 				mystrncat(&outstr, 
 					  priv->priv_ccode, 

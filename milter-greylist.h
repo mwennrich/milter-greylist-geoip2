@@ -203,7 +203,7 @@ struct mlfi_priv {
 	struct bh_line priv_header;
 	struct bh_line priv_body;
 	int priv_maxpeek;
-#ifdef USE_GEOIP
+#if defined(USE_GEOIP) || defined(USE_GEOIP2)
 	const char *priv_ccode;
 #endif
 	size_t priv_msgcount;
